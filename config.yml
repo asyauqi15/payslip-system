@@ -1,0 +1,12 @@
+database:
+  source: "postgresql://postgres:postgres@localhost/payslip_system?sslmode=disable"
+http_server:
+  port: 8000
+  access_token_secret_encoded: "pe2Ui4Dm5uSkeKHoe8nZXTFzlIXd+edAv4mTFUUhnyA="
+  refresh_token_secret_encoded: "gG+NQPk+wnIhoxKac5m07RjGy7zqQT0yMlSICXmj7XE="
+  access_token_duration: 24h
+  refresh_token_duration: 48h
+  read_header_timeout: 2s
+  read_timeout: 2m
+  idle_timeout: 5m
+  write_timeout: 0s

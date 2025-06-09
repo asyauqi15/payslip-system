@@ -1,0 +1,282 @@
+openapi: 3.0.3
+info:
+  title: Payslip API
+  version: 1.0.0
+  description: API for scalable payslip generation with attendance, overtime, and reimbursement
+
+servers:
+  - url: http://localhost:8080
+    description: Local server
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    AuthRequest:
+      type: object
+      required: [username, password]
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+
+    AuthResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        user:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            username:
+              type: string
+            role:
+              type: string
+              enum: [admin, employee]
+
+    AttendancePeriodRequest:
+      type: object
+      required: [start_date, end_date]
+      properties:
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+
+    OvertimeRequest:
+      type: object
+      required: [date, start_time, end_time]
+      properties:
+        date:
+          type: string
+          format: date
+        start_time:
+          type: string
+          format: date-time
+        end_time:
+          type: string
+          format: date-time
+
+    ReimbursementRequest:
+      type: object
+      required: [date, amount, description]
+      properties:
+        date:
+          type: string
+          format: date
+        amount:
+          type: integer
+        description:
+          type: string
+
+    PayslipResponse:
+      type: object
+      properties:
+        payroll_id:
+          type: string
+        base_salary:
+          type: integer
+        prorated_salary:
+          type: integer
+        overtime_payment:
+          type: integer
+        reimbursements:
+          type: array
+          items:
+            type: object
+            properties:
+              date:
+                type: string
+              amount:
+                type: integer
+              description:
+                type: string
+        total_take_home:
+          type: integer
+    DefaultErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: object
+          required:
+            - message
+          properties:
+            message:
+              type: string
+
+paths:
+  /auth/login:
+    post:
+      tags: [auth]
+      summary: Login as employee or admin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuthRequest"
+      responses:
+        200:
+          description: Login success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+
+  /admin/attendance-periods:
+    post:
+      tags: [admin]
+      summary: Create attendance period
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AttendancePeriodRequest"
+      responses:
+        201:
+          description: Created
+
+  /admin/payrolls:
+    post:
+      tags: [admin]
+      summary: Run payroll for a given period
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [attendance_period_id]
+              properties:
+                attendance_period_id:
+                  type: string
+                  format: uuid
+      responses:
+        200:
+          description: Payroll generated
+
+  /admin/payslips/summary:
+    get:
+      tags: [admin]
+      summary: Get summary of all payslips in payroll
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: payroll_id
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Summary generated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  payroll_id:
+                    type: string
+                  total_payout:
+                    type: integer
+                  employees:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        employee_id:
+                          type: string
+                        username:
+                          type: string
+                        total_take_home:
+                          type: integer
+
+  /employee/attendance:
+    post:
+      tags: [employee]
+      summary: Submit attendance for current day
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [attendance_type]
+              properties:
+                attendance_type:
+                  type: string
+                  enum: [check_in, check_out]
+      responses:
+        201:
+          description: Attendance submitted
+
+  /employee/overtime:
+    post:
+      tags: [employee]
+      summary: Submit overtime
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OvertimeRequest"
+      responses:
+        201:
+          description: Overtime submitted
+
+  /employee/reimbursement:
+    post:
+      tags: [employee]
+      summary: Submit reimbursement
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReimbursementRequest"
+      responses:
+        201:
+          description: Reimbursement submitted
+
+  /employee/payslip:
+    get:
+      tags: [employee]
+      summary: Get payslip for a given payroll
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: payroll_id
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Payslip retrieved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PayslipResponse"
