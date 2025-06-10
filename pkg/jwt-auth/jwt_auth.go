@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/asyauqi15/payslip-system/internal"
 	"github.com/asyauqi15/payslip-system/internal/constant"
-	"github.com/asyauqi15/payslip-system/internal/entity"
 	v1 "github.com/asyauqi15/payslip-system/pkg/openapi/v1"
 	"github.com/go-chi/jwtauth"
 	"github.com/go-chi/render"
@@ -78,7 +77,7 @@ func (ja *JWTAuthentication) Authenticator(next http.Handler) http.Handler {
 	})
 }
 
-func (ja *JWTAuthentication) GenerateAccessToken(ctx context.Context, user *entity.User) (string, time.Time, error) {
+func (ja *JWTAuthentication) GenerateAccessToken(ctx context.Context, user *core.User) (string, time.Time, error) {
 	expiredAt := time.Now().Add(ja.accessTokenDuration)
 	token, err := generateToken(ctx, ja.accessTokenAuth, user, expiredAt)
 	if err != nil {
@@ -87,7 +86,7 @@ func (ja *JWTAuthentication) GenerateAccessToken(ctx context.Context, user *enti
 	return token, expiredAt, err
 }
 
-func (ja *JWTAuthentication) GenerateRefreshToken(ctx context.Context, user *entity.User) (string, time.Time, error) {
+func (ja *JWTAuthentication) GenerateRefreshToken(ctx context.Context, user *core.User) (string, time.Time, error) {
 	expiredAt := time.Now().Add(ja.refreshTokenDuration)
 	token, err := generateToken(ctx, ja.refreshTokenAuth, user, expiredAt)
 	if err != nil {
@@ -124,7 +123,7 @@ func parseToken(ctx context.Context, jwt *jwtauth.JWTAuth, token string) (TokenC
 	}, nil
 }
 
-func generateToken(ctx context.Context, jwt *jwtauth.JWTAuth, user *entity.User, expiredAt time.Time) (string, error) {
+func generateToken(ctx context.Context, jwt *jwtauth.JWTAuth, user *core.User, expiredAt time.Time) (string, error) {
 	claims := map[string]interface{}{
 		jwtUserIDKey:    user.ID,
 		jwtUserEmailKey: user.Email,
