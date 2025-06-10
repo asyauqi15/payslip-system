@@ -5,7 +5,7 @@ info:
   description: API for scalable payslip generation with attendance, overtime, and reimbursement
 
 servers:
-  - url: http://localhost:8080
+  - url: http://localhost:8000
     description: Local server
 
 components:
@@ -18,29 +18,21 @@ components:
   schemas:
     AuthRequest:
       type: object
-      required: [username, password]
+      required: [email, password]
       properties:
-        username:
+        email:
           type: string
         password:
           type: string
 
     AuthResponse:
       type: object
+      required: [access_token, refresh_token]
       properties:
-        token:
+        access_token:
           type: string
-        user:
-          type: object
-          properties:
-            id:
-              type: string
-              format: uuid
-            username:
-              type: string
-            role:
-              type: string
-              enum: [admin, employee]
+        refresh_token:
+          type: string
 
     AttendancePeriodRequest:
       type: object

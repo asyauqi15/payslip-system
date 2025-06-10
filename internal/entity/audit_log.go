@@ -5,7 +5,7 @@ import "time"
 type AuditLog struct {
 	ID         string `gorm:"primaryKey;type:uuid;default:uuid_generate_v4()"`
 	TableName  string `gorm:"not null"`
-	RecordID   string `gorm:"not null"`
+	RecordID   int64  `gorm:"not null"`
 	Action     string `gorm:"not null"`
 	DataBefore map[string]any
 	DataAfter  map[string]any

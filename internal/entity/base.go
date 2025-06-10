@@ -8,12 +8,12 @@ import (
 )
 
 type Base struct {
-	ID        string    `gorm:"primaryKey;type:uuid;default:uuid_generate_v4()"`
+	ID        int64     `gorm:"primaryKey"`
 	CreatedAt time.Time `gorm:"autoCreateTime;not null"`
 	UpdatedAt time.Time `gorm:"autoUpdateTime;not null"`
 }
 
-func (b *Base) BeforeUpdate(tx *gorm.DB) (err error) {
+func (b Base) BeforeUpdate(tx *gorm.DB) (err error) {
 	// Capture the state before the update
 	dataBefore := make(map[string]any)
 	if err := tx.Statement.Preload("").Find(dataBefore).Error; err != nil {
@@ -23,7 +23,7 @@ func (b *Base) BeforeUpdate(tx *gorm.DB) (err error) {
 	return nil
 }
 
-func (b *Base) AfterUpdate(tx *gorm.DB) (err error) {
+func (b Base) AfterUpdate(tx *gorm.DB) (err error) {
 	// Capture the state after the update
 	dataAfter := make(map[string]any)
 	if err := tx.Statement.Preload("").Find(dataAfter).Error; err != nil {
@@ -46,10 +46,16 @@ func (b *Base) AfterUpdate(tx *gorm.DB) (err error) {
 		}
 	}
 
+	// Retrieve the primary key value
+	var recordID any
+	if field := tx.Statement.Schema.LookUpField("ID"); field != nil {
+		recordID, _ = field.ValueOf(tx.Statement.Context, tx.Statement.ReflectValue)
+	}
+
 	// Create an audit log entry
 	return tx.Create(AuditLog{
 		TableName:  tx.Statement.Table,
-		RecordID:   tx.Statement.Schema.PrimaryFields[0].DBName,
+		RecordID:   recordID.(int64),
 		Action:     AuditLogActionUpdate,
 		DataBefore: differencesBefore,
 		DataAfter:  differencesAfter,
@@ -58,11 +64,17 @@ func (b *Base) AfterUpdate(tx *gorm.DB) (err error) {
 	}).Error
 }
 
-func (b *Base) AfterCreate(tx *gorm.DB) (err error) {
+func (b Base) AfterCreate(tx *gorm.DB) (err error) {
+	// Retrieve the primary key value
+	var recordID any
+	if field := tx.Statement.Schema.LookUpField("ID"); field != nil {
+		recordID, _ = field.ValueOf(tx.Statement.Context, tx.Statement.ReflectValue)
+	}
+
 	// Create an audit log entry
 	return tx.Create(AuditLog{
 		TableName:  tx.Statement.Table,
-		RecordID:   tx.Statement.Schema.PrimaryFields[0].DBName,
+		RecordID:   recordID.(int64),
 		Action:     AuditLogActionCreate,
 		DataBefore: nil,
 		DataAfter:  nil,

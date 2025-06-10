@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/asyauqi15/payslip-system/internal/transport"
+	jwtauth "github.com/asyauqi15/payslip-system/pkg/jwt-auth"
 	"github.com/spf13/cobra"
 	"log"
 	"os"
@@ -30,9 +31,14 @@ func runHTTPServer(_ *cobra.Command, _ []string) error {
 		log.Fatal(err)
 	}
 
-	r := initRegistry(cfg)
+	jwtAuth, err := jwtauth.NewJWTAuthentication(cfg.HTTPServer)
+	if err != nil {
+		log.Fatalf("failed to create JWT authentication: %s", err)
+	}
 
-	server, err := transport.NewRESTServer(cfg, r.db)
+	r := initRegistry(cfg, jwtAuth)
+
+	server, err := transport.NewRESTServer(cfg, r.handler)
 	if err != nil {
 		log.Fatalf("failed to initiate http server: %s", err)
 	}

@@ -5,7 +5,6 @@ type User struct {
 	Email        string `gorm:"uniqueIndex;not null"`
 	PasswordHash string `gorm:"not null"`
 	Role         string `gorm:"not null"`
-	Status       int    `gorm:"not null;default:1"`
 }
 
 const (

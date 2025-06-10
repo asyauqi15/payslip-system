@@ -15,9 +15,17 @@ create-migration:
 	$(call check_defined, NAME)
 	goose -dir="./db/migrations" create $(NAME) sql
 
+create-seed:
+	$(call check_defined, NAME)
+	goose -dir="./db/seeds" create $(NAME) sql
+
 ## run migration until latest version
 migrate:
 	go run main.go migrate
+
+## run seed
+seed:
+	go run main.go seed
 
 ## generate openapi code
 generate-openapi:

@@ -12,7 +12,7 @@ type AttendancePeriod struct {
 	EndDate   time.Time `gorm:"not null;index"`
 }
 
-func (ap *AttendancePeriod) BeforeCreate(tx *gorm.DB) (err error) {
+func (ap AttendancePeriod) BeforeCreate(tx *gorm.DB) (err error) {
 	var count int64
 	err = tx.Model(&AttendancePeriod{}).
 		Where("start_date < ? AND end_date > ?", ap.EndDate, ap.StartDate).
@@ -27,7 +27,7 @@ func (ap *AttendancePeriod) BeforeCreate(tx *gorm.DB) (err error) {
 	return nil
 }
 
-func (ap *AttendancePeriod) BeforeUpdate(tx *gorm.DB) (err error) {
+func (ap AttendancePeriod) BeforeUpdate(tx *gorm.DB) (err error) {
 	var count int64
 	err = tx.Model(&AttendancePeriod{}).
 		Where("id != ? AND start_date < ? AND end_date > ?", ap.ID, ap.EndDate, ap.StartDate).

@@ -16,7 +16,14 @@ var rootCmd = &cobra.Command{
 }
 
 func init() {
+	migrateCmd.Flags().BoolVarP(&MigrateRollback, "rollback", "r", false, "to rollback the latest version of sql migration")
+	migrateCmd.PersistentFlags().StringVarP(&MigrateDir, "dir", "d", "db/migrations", "sql migrations directory")
+
+	seedCmd.PersistentFlags().StringVarP(&SeedDir, "dir", "d", "db/seeds", "sql seeds directory")
+
 	rootCmd.AddCommand(httpServerCmd)
+	rootCmd.AddCommand(migrateCmd)
+	rootCmd.AddCommand(seedCmd)
 }
 
 func Execute() {
