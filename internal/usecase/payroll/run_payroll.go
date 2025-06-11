@@ -9,6 +9,7 @@ import (
 	"github.com/asyauqi15/payslip-system/internal/entity"
 	httppkg "github.com/asyauqi15/payslip-system/pkg/http"
 	v1 "github.com/asyauqi15/payslip-system/pkg/openapi/v1"
+	"gorm.io/gorm"
 )
 
 func (u *UsecaseImpl) RunPayroll(ctx context.Context, req v1.PostAdminPayrollsJSONRequestBody) error {
@@ -26,7 +27,7 @@ func (u *UsecaseImpl) RunPayroll(ctx context.Context, req v1.PostAdminPayrollsJS
 	existingPayroll, err := u.payrollRepo.FindOneByTemplate(ctx, &entity.Payroll{
 		AttendancePeriodID: int64(req.AttendancePeriodId),
 	}, nil)
-	if err != nil {
+	if err != nil && err != gorm.ErrRecordNotFound {
 		slog.ErrorContext(ctx, "failed to check existing payroll", "attendance_period_id", req.AttendancePeriodId, "error", err)
 		return httppkg.NewInternalServerError("failed to check existing payroll")
 	}

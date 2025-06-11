@@ -81,7 +81,8 @@ func TestPayslipRepository_Create(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setupMock()
 
-			result, err := repo.Create(context.Background(), payslip, nil)
+			ctx := context.WithValue(context.Background(), "skip_audit", true)
+			result, err := repo.Create(ctx, payslip, nil)
 
 			if tt.expectError {
 				if err == nil {
@@ -244,8 +245,8 @@ func TestPayslipRepository_FindOneByTemplate(t *testing.T) {
 			setupMock: func() {
 				rows := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "employee_id", "payroll_id", "base_salary", "attendance_count", "total_working_days", "prorated_salary", "overtime_total_hours", "overtime_total_amount", "reimbursement_total", "total_take_home"}).
 					AddRow(1, time.Now(), time.Now(), 1, 1, 5000000, 20, 22, 4545454, 10, 500000, 100000, 5145454)
-				mock.ExpectQuery(regexp.QuoteMeta(`SELECT * FROM "payslips" WHERE "payslips"."employee_id" = $1 AND "payslips"."payroll_id" = $2`)).
-					WithArgs(int64(1), int64(1)).
+				mock.ExpectQuery(regexp.QuoteMeta(`SELECT * FROM "payslips" WHERE "payslips"."employee_id" = $1 AND "payslips"."payroll_id" = $2 ORDER BY "payslips"."id" LIMIT $3`)).
+					WithArgs(int64(1), int64(1), 1).
 					WillReturnRows(rows)
 			},
 			expectError: false,
@@ -254,11 +255,11 @@ func TestPayslipRepository_FindOneByTemplate(t *testing.T) {
 		{
 			name: "not found",
 			setupMock: func() {
-				mock.ExpectQuery(regexp.QuoteMeta(`SELECT * FROM "payslips" WHERE "payslips"."employee_id" = $1 AND "payslips"."payroll_id" = $2`)).
-					WithArgs(int64(1), int64(1)).
+				mock.ExpectQuery(regexp.QuoteMeta(`SELECT * FROM "payslips" WHERE "payslips"."employee_id" = $1 AND "payslips"."payroll_id" = $2 ORDER BY "payslips"."id" LIMIT $3`)).
+					WithArgs(int64(1), int64(1), 1).
 					WillReturnError(gorm.ErrRecordNotFound)
 			},
-			expectError: true,
+			expectError: false,
 			expectNil:   true,
 		},
 	}

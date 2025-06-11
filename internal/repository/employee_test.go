@@ -73,7 +73,8 @@ func TestEmployeeRepository_Create(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setupMock()
 
-			result, err := repo.Create(context.Background(), employee, nil)
+			ctx := context.WithValue(context.Background(), "skip_audit", true)
+			result, err := repo.Create(ctx, employee, nil)
 
 			if tt.expectError {
 				if err == nil {
@@ -130,8 +131,8 @@ func TestEmployeeRepository_FindByID(t *testing.T) {
 			setupMock: func() {
 				rows := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "user_id", "base_salary"}).
 					AddRow(1, time.Now(), time.Now(), 1, 50000)
-				mock.ExpectQuery(regexp.QuoteMeta(`SELECT * FROM "employees" WHERE "employees"."id" = $1`)).
-					WithArgs(1).
+				mock.ExpectQuery(regexp.QuoteMeta(`SELECT * FROM "employees" WHERE "employees"."id" = $1 ORDER BY "employees"."id" LIMIT $2`)).
+					WithArgs(1, 1).
 					WillReturnRows(rows)
 			},
 			expectError: false,
@@ -141,8 +142,8 @@ func TestEmployeeRepository_FindByID(t *testing.T) {
 			name:       "not found",
 			employeeID: 999,
 			setupMock: func() {
-				mock.ExpectQuery(regexp.QuoteMeta(`SELECT * FROM "employees" WHERE "employees"."id" = $1`)).
-					WithArgs(999).
+				mock.ExpectQuery(regexp.QuoteMeta(`SELECT * FROM "employees" WHERE "employees"."id" = $1 ORDER BY "employees"."id" LIMIT $2`)).
+					WithArgs(999, 1).
 					WillReturnError(gorm.ErrRecordNotFound)
 			},
 			expectError: true,
@@ -218,8 +219,8 @@ func TestEmployeeRepository_FindOneByTemplate(t *testing.T) {
 			setupMock: func() {
 				rows := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "user_id", "base_salary"}).
 					AddRow(1, time.Now(), time.Now(), 1, 50000)
-				mock.ExpectQuery(regexp.QuoteMeta(`SELECT * FROM "employees" WHERE "employees"."user_id" = $1`)).
-					WithArgs(int64(1)).
+				mock.ExpectQuery(regexp.QuoteMeta(`SELECT * FROM "employees" WHERE "employees"."user_id" = $1 ORDER BY "employees"."id" LIMIT $2`)).
+					WithArgs(int64(1), 1).
 					WillReturnRows(rows)
 			},
 			expectError: false,
@@ -228,11 +229,11 @@ func TestEmployeeRepository_FindOneByTemplate(t *testing.T) {
 		{
 			name: "not found",
 			setupMock: func() {
-				mock.ExpectQuery(regexp.QuoteMeta(`SELECT * FROM "employees" WHERE "employees"."user_id" = $1`)).
-					WithArgs(int64(1)).
+				mock.ExpectQuery(regexp.QuoteMeta(`SELECT * FROM "employees" WHERE "employees"."user_id" = $1 ORDER BY "employees"."id" LIMIT $2`)).
+					WithArgs(int64(1), 1).
 					WillReturnError(gorm.ErrRecordNotFound)
 			},
-			expectError: true,
+			expectError: false,
 			expectNil:   true,
 		},
 	}

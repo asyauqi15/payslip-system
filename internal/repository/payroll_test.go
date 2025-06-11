@@ -76,7 +76,8 @@ func TestPayrollRepository_Create(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setupMock()
 
-			result, err := repo.Create(context.Background(), payroll, nil)
+			ctx := context.WithValue(context.Background(), "skip_audit", true)
+			result, err := repo.Create(ctx, payroll, nil)
 
 			if tt.expectError {
 				if err == nil {
@@ -133,8 +134,8 @@ func TestPayrollRepository_FindByID(t *testing.T) {
 			setupMock: func() {
 				rows := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "attendance_period_id", "employees_count", "total_reimbursement", "total_overtime", "total_payroll"}).
 					AddRow(1, time.Now(), time.Now(), 1, 10, 500000, 200000, 5000000)
-				mock.ExpectQuery(regexp.QuoteMeta(`SELECT * FROM "payrolls" WHERE "payrolls"."id" = $1`)).
-					WithArgs(1).
+				mock.ExpectQuery(regexp.QuoteMeta(`SELECT * FROM "payrolls" WHERE "payrolls"."id" = $1 ORDER BY "payrolls"."id" LIMIT $2`)).
+					WithArgs(1, 1).
 					WillReturnRows(rows)
 			},
 			expectError: false,
@@ -144,8 +145,8 @@ func TestPayrollRepository_FindByID(t *testing.T) {
 			name:      "not found",
 			payrollID: 999,
 			setupMock: func() {
-				mock.ExpectQuery(regexp.QuoteMeta(`SELECT * FROM "payrolls" WHERE "payrolls"."id" = $1`)).
-					WithArgs(999).
+				mock.ExpectQuery(regexp.QuoteMeta(`SELECT * FROM "payrolls" WHERE "payrolls"."id" = $1 ORDER BY "payrolls"."id" LIMIT $2`)).
+					WithArgs(999, 1).
 					WillReturnError(gorm.ErrRecordNotFound)
 			},
 			expectError: true,

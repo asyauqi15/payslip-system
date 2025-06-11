@@ -108,13 +108,13 @@ func (ja *JWTAuthentication) ParseRefreshToken(ctx context.Context, token string
 func parseToken(ctx context.Context, jwt *jwtauth.JWTAuth, token string) (TokenClaims, error) {
 	refreshToken, err := jwtauth.VerifyToken(jwt, token)
 	if err != nil {
-		slog.ErrorContext(ctx, "error when verify token", err)
+		slog.ErrorContext(ctx, "error when verify token", "error", err)
 		return TokenClaims{}, err
 	}
 
 	claims, err := refreshToken.AsMap(ctx)
 	if err != nil {
-		slog.ErrorContext(ctx, "error when get token claims", err)
+		slog.ErrorContext(ctx, "error when get token claims", "error", err)
 		return TokenClaims{}, err
 	}
 
@@ -136,7 +136,7 @@ func generateToken(ctx context.Context, jwt *jwtauth.JWTAuth, user *entity.User,
 
 	_, tokenString, err := jwt.Encode(claims)
 	if err != nil {
-		slog.ErrorContext(ctx, "error when encode token claims", err)
+		slog.ErrorContext(ctx, "error when encode token claims", "error", err)
 		return "", err
 	}
 	return tokenString, nil

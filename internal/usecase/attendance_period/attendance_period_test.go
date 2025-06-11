@@ -72,17 +72,9 @@ func TestAttendancePeriodUsecase_CreateAttendancePeriod(t *testing.T) {
 			startDate: endDate,   // Later date
 			endDate:   startDate, // Earlier date
 			setupMock: func() {
-				// The usecase might validate this before calling repository
-				mockAttendancePeriodRepo.EXPECT().
-					Create(gomock.Any(), gomock.Any(), nil).
-					Return(&entity.AttendancePeriod{
-						Base:      entity.Base{ID: 1},
-						StartDate: endDate,
-						EndDate:   startDate,
-					}, nil).
-					AnyTimes() // May or may not be called depending on validation
+				// No mock expectation since validation should fail before repository call
 			},
-			expectError: false, // Let the entity validation handle this
+			expectError: true,
 		},
 		{
 			name:      "same start and end date",

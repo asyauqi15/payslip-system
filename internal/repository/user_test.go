@@ -74,7 +74,8 @@ func TestUserRepository_Create(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setupMock()
 
-			result, err := repo.Create(context.Background(), user, nil)
+			ctx := context.WithValue(context.Background(), "skip_audit", true)
+			result, err := repo.Create(ctx, user, nil)
 
 			if tt.expectError {
 				if err == nil {
@@ -131,8 +132,8 @@ func TestUserRepository_FindByID(t *testing.T) {
 			setupMock: func() {
 				rows := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "username", "password_hash", "role"}).
 					AddRow(1, time.Now(), time.Now(), "testuser", "hashedpassword", entity.UserRoleAdmin)
-				mock.ExpectQuery(regexp.QuoteMeta(`SELECT * FROM "users" WHERE "users"."id" = $1`)).
-					WithArgs(1).
+				mock.ExpectQuery(regexp.QuoteMeta(`SELECT * FROM "users" WHERE "users"."id" = $1 ORDER BY "users"."id" LIMIT $2`)).
+					WithArgs(1, 1).
 					WillReturnRows(rows)
 			},
 			expectError: false,
@@ -142,8 +143,8 @@ func TestUserRepository_FindByID(t *testing.T) {
 			name:   "not found",
 			userID: 999,
 			setupMock: func() {
-				mock.ExpectQuery(regexp.QuoteMeta(`SELECT * FROM "users" WHERE "users"."id" = $1`)).
-					WithArgs(999).
+				mock.ExpectQuery(regexp.QuoteMeta(`SELECT * FROM "users" WHERE "users"."id" = $1 ORDER BY "users"."id" LIMIT $2`)).
+					WithArgs(999, 1).
 					WillReturnError(gorm.ErrRecordNotFound)
 			},
 			expectError: true,

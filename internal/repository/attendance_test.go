@@ -74,7 +74,8 @@ func TestAttendanceRepository_Create(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setupMock()
 
-			result, err := repo.Create(context.Background(), attendance, nil)
+			ctx := context.WithValue(context.Background(), "skip_audit", true)
+			result, err := repo.Create(ctx, attendance, nil)
 
 			if tt.expectError {
 				if err == nil {
@@ -131,8 +132,8 @@ func TestAttendanceRepository_CountAttendanceInPeriod(t *testing.T) {
 		{
 			name: "successful count",
 			setupMock: func() {
-				mock.ExpectQuery(regexp.QuoteMeta(`SELECT count(*) FROM "attendances" WHERE employee_id = $1 AND clock_in_time != '' AND clock_in_time >= $2 AND clock_in_time <= $3`)).
-					WithArgs(employeeID, startDate.Format(time.RFC3339), endDate.Format(time.RFC3339)).
+				mock.ExpectQuery(regexp.QuoteMeta(`SELECT count(*) FROM "attendances" WHERE employee_id = $1 AND clock_in_time >= $2 AND clock_in_time <= $3`)).
+					WithArgs(employeeID, startDate.Format("2006-01-02 00:00:00"), endDate.Format("2006-01-02 23:59:59")).
 					WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(20))
 			},
 			expectError:   false,
@@ -141,7 +142,8 @@ func TestAttendanceRepository_CountAttendanceInPeriod(t *testing.T) {
 		{
 			name: "database error",
 			setupMock: func() {
-				mock.ExpectQuery(regexp.QuoteMeta(`SELECT count(*) FROM "attendances"`)).
+				mock.ExpectQuery(regexp.QuoteMeta(`SELECT count(*) FROM "attendances" WHERE employee_id = $1 AND clock_in_time >= $2 AND clock_in_time <= $3`)).
+					WithArgs(employeeID, startDate.Format("2006-01-02 00:00:00"), endDate.Format("2006-01-02 23:59:59")).
 					WillReturnError(gorm.ErrInvalidDB)
 			},
 			expectError:   true,
@@ -150,8 +152,8 @@ func TestAttendanceRepository_CountAttendanceInPeriod(t *testing.T) {
 		{
 			name: "no attendance records",
 			setupMock: func() {
-				mock.ExpectQuery(regexp.QuoteMeta(`SELECT count(*) FROM "attendances" WHERE employee_id = $1 AND clock_in_time != '' AND clock_in_time >= $2 AND clock_in_time <= $3`)).
-					WithArgs(employeeID, startDate.Format(time.RFC3339), endDate.Format(time.RFC3339)).
+				mock.ExpectQuery(regexp.QuoteMeta(`SELECT count(*) FROM "attendances" WHERE employee_id = $1 AND clock_in_time >= $2 AND clock_in_time <= $3`)).
+					WithArgs(employeeID, startDate.Format("2006-01-02 00:00:00"), endDate.Format("2006-01-02 23:59:59")).
 					WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(0))
 			},
 			expectError:   false,

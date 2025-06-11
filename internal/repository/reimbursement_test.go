@@ -77,7 +77,8 @@ func TestReimbursementRepository_Create(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setupMock()
 
-			result, err := repo.Create(context.Background(), reimbursement, nil)
+			ctx := context.WithValue(context.Background(), "skip_audit", true)
+			result, err := repo.Create(ctx, reimbursement, nil)
 
 			if tt.expectError {
 				if err == nil {

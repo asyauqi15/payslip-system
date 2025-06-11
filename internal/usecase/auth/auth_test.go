@@ -3,11 +3,13 @@ package auth_test
 import (
 	"context"
 	"testing"
+	"time"
 
+	"github.com/asyauqi15/payslip-system/internal"
 	"github.com/asyauqi15/payslip-system/internal/entity"
 	authmock "github.com/asyauqi15/payslip-system/internal/repository/mock"
 	"github.com/asyauqi15/payslip-system/internal/usecase/auth"
-	jwtauth "github.com/asyauqi15/payslip-system/pkg/jwt-auth"
+	jwtauth_pkg "github.com/asyauqi15/payslip-system/pkg/jwt-auth"
 	"go.uber.org/mock/gomock"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
@@ -18,7 +20,19 @@ func TestAuthUsecase_Auth(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockUserRepo := authmock.NewMockUserRepository(ctrl)
-	jwtAuth := &jwtauth.JWTAuthentication{}
+
+	// Create a properly initialized JWT auth for testing using the constructor
+	testConfig := internal.HTTPServerConfig{
+		AccessTokenSecretEncoded:  "dGVzdC1hY2Nlc3Mtc2VjcmV0LWtleS1mb3ItdGVzdGluZy1wdXJwb3Nlcw==", // base64 encoded test secret
+		RefreshTokenSecretEncoded: "dGVzdC1yZWZyZXNoLXNlY3JldC1rZXktZm9yLXRlc3RpbmctcHVycG9zZXM=", // base64 encoded test secret
+		AccessTokenDuration:       time.Hour,                                                      // 1 hour
+		RefreshTokenDuration:      time.Hour * 24,                                                 // 24 hours
+	}
+
+	jwtAuth, err := jwtauth_pkg.NewJWTAuthentication(testConfig)
+	if err != nil {
+		t.Fatalf("Failed to create JWT auth: %v", err)
+	}
 
 	usecase := auth.NewUsecase(mockUserRepo, jwtAuth)
 
@@ -48,7 +62,7 @@ func TestAuthUsecase_Auth(t *testing.T) {
 					FindOneByTemplate(gomock.Any(), &entity.User{Username: "admin@example.com"}, nil).
 					Return(user, nil)
 			},
-			expectError: false,
+			expectError: false, // Changed back to false since JWT auth is now properly initialized
 		},
 		{
 			name:     "user not found",

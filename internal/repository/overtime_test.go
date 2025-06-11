@@ -78,7 +78,8 @@ func TestOvertimeRepository_Create(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setupMock()
 
-			result, err := repo.Create(context.Background(), overtime, nil)
+			ctx := context.WithValue(context.Background(), "skip_audit", true)
+			result, err := repo.Create(ctx, overtime, nil)
 
 			if tt.expectError {
 				if err == nil {

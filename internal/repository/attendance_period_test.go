@@ -52,12 +52,11 @@ func TestAttendancePeriodRepository_Create(t *testing.T) {
 		{
 			name: "successful creation",
 			setupMock: func() {
+				mock.ExpectBegin()
 				// Mock the overlap check query in BeforeCreate hook
 				mock.ExpectQuery(regexp.QuoteMeta(`SELECT count(*) FROM "attendance_periods" WHERE start_date <= $1 AND end_date >= $2`)).
 					WithArgs(endDate, startDate).
 					WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(0))
-
-				mock.ExpectBegin()
 				mock.ExpectQuery(regexp.QuoteMeta(`INSERT INTO "attendance_periods" ("created_at","updated_at","start_date","end_date") VALUES ($1,$2,$3,$4) RETURNING "id"`)).
 					WithArgs(sqlmock.AnyArg(), sqlmock.AnyArg(), startDate, endDate).
 					WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(1))
@@ -68,12 +67,11 @@ func TestAttendancePeriodRepository_Create(t *testing.T) {
 		{
 			name: "overlapping period error",
 			setupMock: func() {
+				mock.ExpectBegin()
 				// Mock the overlap check query in BeforeCreate hook
 				mock.ExpectQuery(regexp.QuoteMeta(`SELECT count(*) FROM "attendance_periods" WHERE start_date <= $1 AND end_date >= $2`)).
 					WithArgs(endDate, startDate).
 					WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(1))
-
-				mock.ExpectBegin()
 				mock.ExpectRollback()
 			},
 			expectError: true,
@@ -81,12 +79,11 @@ func TestAttendancePeriodRepository_Create(t *testing.T) {
 		{
 			name: "database error",
 			setupMock: func() {
+				mock.ExpectBegin()
 				// Mock the overlap check query in BeforeCreate hook
 				mock.ExpectQuery(regexp.QuoteMeta(`SELECT count(*) FROM "attendance_periods" WHERE start_date <= $1 AND end_date >= $2`)).
 					WithArgs(endDate, startDate).
 					WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(0))
-
-				mock.ExpectBegin()
 				mock.ExpectQuery(regexp.QuoteMeta(`INSERT INTO "attendance_periods"`)).
 					WillReturnError(gorm.ErrInvalidDB)
 				mock.ExpectRollback()
@@ -99,7 +96,9 @@ func TestAttendancePeriodRepository_Create(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setupMock()
 
-			result, err := repo.Create(context.Background(), attendancePeriod, nil)
+			// Create context with skip_audit flag
+			ctx := context.WithValue(context.Background(), "skip_audit", true)
+			result, err := repo.Create(ctx, attendancePeriod, nil)
 
 			if tt.expectError {
 				if err == nil {
@@ -167,8 +166,8 @@ func TestAttendancePeriodRepository_FindByID(t *testing.T) {
 			setupMock: func() {
 				rows := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "start_date", "end_date"}).
 					AddRow(1, time.Now(), time.Now(), startDate, endDate)
-				mock.ExpectQuery(regexp.QuoteMeta(`SELECT * FROM "attendance_periods" WHERE "attendance_periods"."id" = $1 ORDER BY "attendance_periods"."id" LIMIT 1`)).
-					WithArgs(int64(1)).
+				mock.ExpectQuery(regexp.QuoteMeta(`SELECT * FROM "attendance_periods" WHERE "attendance_periods"."id" = $1 ORDER BY "attendance_periods"."id" LIMIT $2`)).
+					WithArgs(int64(1), 1).
 					WillReturnRows(rows)
 			},
 			expectError: false,
@@ -178,8 +177,8 @@ func TestAttendancePeriodRepository_FindByID(t *testing.T) {
 			name: "not found",
 			id:   99,
 			setupMock: func() {
-				mock.ExpectQuery(regexp.QuoteMeta(`SELECT * FROM "attendance_periods" WHERE "attendance_periods"."id" = $1 ORDER BY "attendance_periods"."id" LIMIT 1`)).
-					WithArgs(int64(99)).
+				mock.ExpectQuery(regexp.QuoteMeta(`SELECT * FROM "attendance_periods" WHERE "attendance_periods"."id" = $1 ORDER BY "attendance_periods"."id" LIMIT $2`)).
+					WithArgs(int64(99), 1).
 					WillReturnError(gorm.ErrRecordNotFound)
 			},
 			expectError: true,
@@ -189,8 +188,8 @@ func TestAttendancePeriodRepository_FindByID(t *testing.T) {
 			name: "database error",
 			id:   1,
 			setupMock: func() {
-				mock.ExpectQuery(regexp.QuoteMeta(`SELECT * FROM "attendance_periods" WHERE "attendance_periods"."id" = $1`)).
-					WithArgs(int64(1)).
+				mock.ExpectQuery(regexp.QuoteMeta(`SELECT * FROM "attendance_periods" WHERE "attendance_periods"."id" = $1 ORDER BY "attendance_periods"."id" LIMIT $2`)).
+					WithArgs(int64(1), 1).
 					WillReturnError(gorm.ErrInvalidDB)
 			},
 			expectError: true,
@@ -283,12 +282,11 @@ func TestAttendancePeriodRepository_Update(t *testing.T) {
 		{
 			name: "successful update",
 			setupMock: func() {
+				mock.ExpectBegin()
 				// Mock the overlap check query in BeforeUpdate hook
-				mock.ExpectQuery(regexp.QuoteMeta(`SELECT count(*) FROM "attendance_periods" WHERE id != $1 AND start_date =< $2 AND end_date >= $3`)).
+				mock.ExpectQuery(regexp.QuoteMeta(`SELECT count(*) FROM "attendance_periods" WHERE id != $1 AND start_date <= $2 AND end_date >= $3`)).
 					WithArgs(int64(1), endDate, startDate).
 					WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(0))
-
-				mock.ExpectBegin()
 				mock.ExpectExec(regexp.QuoteMeta(`UPDATE "attendance_periods" SET "updated_at"=$1,"start_date"=$2,"end_date"=$3 WHERE "id" = $4`)).
 					WithArgs(sqlmock.AnyArg(), startDate, endDate, int64(1)).
 					WillReturnResult(sqlmock.NewResult(0, 1))
@@ -299,12 +297,11 @@ func TestAttendancePeriodRepository_Update(t *testing.T) {
 		{
 			name: "overlapping period error",
 			setupMock: func() {
+				mock.ExpectBegin()
 				// Mock the overlap check query in BeforeUpdate hook
-				mock.ExpectQuery(regexp.QuoteMeta(`SELECT count(*) FROM "attendance_periods" WHERE id != $1 AND start_date =< $2 AND end_date >= $3`)).
+				mock.ExpectQuery(regexp.QuoteMeta(`SELECT count(*) FROM "attendance_periods" WHERE id != $1 AND start_date <= $2 AND end_date >= $3`)).
 					WithArgs(int64(1), endDate, startDate).
 					WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(1))
-
-				mock.ExpectBegin()
 				mock.ExpectRollback()
 			},
 			expectError: true,
@@ -312,12 +309,11 @@ func TestAttendancePeriodRepository_Update(t *testing.T) {
 		{
 			name: "database error",
 			setupMock: func() {
+				mock.ExpectBegin()
 				// Mock the overlap check query in BeforeUpdate hook
-				mock.ExpectQuery(regexp.QuoteMeta(`SELECT count(*) FROM "attendance_periods" WHERE id != $1 AND start_date =< $2 AND end_date >= $3`)).
+				mock.ExpectQuery(regexp.QuoteMeta(`SELECT count(*) FROM "attendance_periods" WHERE id != $1 AND start_date <= $2 AND end_date >= $3`)).
 					WithArgs(int64(1), endDate, startDate).
 					WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(0))
-
-				mock.ExpectBegin()
 				mock.ExpectExec(regexp.QuoteMeta(`UPDATE "attendance_periods"`)).
 					WillReturnError(gorm.ErrInvalidDB)
 				mock.ExpectRollback()

@@ -163,18 +163,9 @@ func TestReimbursementUsecase_SubmitReimbursement(t *testing.T) {
 					FindOneByTemplate(gomock.Any(), &entity.Employee{UserID: int64(1)}, nil).
 					Return(employee, nil)
 
-				// Mock creating reimbursement with zero amount
-				mockReimbursementRepo.EXPECT().
-					Create(gomock.Any(), gomock.Any(), nil).
-					Return(&entity.Reimbursement{
-						Base:        entity.Base{ID: 1},
-						EmployeeID:  1,
-						Amount:      0,
-						Date:        reimbursementDate,
-						Description: "Test reimbursement",
-					}, nil)
+				// No expectation for reimbursement creation since validation should fail
 			},
-			expectError: false, // Zero amount might be valid in some business cases
+			expectError: true, // Zero amount should be invalid
 		},
 		{
 			name: "negative amount reimbursement",
@@ -197,18 +188,9 @@ func TestReimbursementUsecase_SubmitReimbursement(t *testing.T) {
 					FindOneByTemplate(gomock.Any(), &entity.Employee{UserID: int64(1)}, nil).
 					Return(employee, nil)
 
-				// Mock creating reimbursement with negative amount
-				mockReimbursementRepo.EXPECT().
-					Create(gomock.Any(), gomock.Any(), nil).
-					Return(&entity.Reimbursement{
-						Base:        entity.Base{ID: 1},
-						EmployeeID:  1,
-						Amount:      -10000,
-						Date:        reimbursementDate,
-						Description: "Correction reimbursement",
-					}, nil)
+				// No expectation for reimbursement creation since validation should fail
 			},
-			expectError: false, // Negative amount might be valid for corrections
+			expectError: true, // Negative amount should be invalid
 		},
 	}
 

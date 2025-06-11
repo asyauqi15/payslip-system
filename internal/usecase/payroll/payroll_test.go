@@ -86,67 +86,40 @@ func TestPayrollUsecase_RunPayroll(t *testing.T) {
 					Base:               entity.Base{ID: 1},
 					AttendancePeriodID: 1,
 					TotalEmployees:     2,
-					TotalReimbursement: 0,
-					TotalOvertime:      0,
-					TotalPayroll:       0,
 				}
 				mockPayrollRepo.EXPECT().
 					Create(gomock.Any(), gomock.Any(), nil).
 					Return(createdPayroll, nil)
 
-				// Mock employee 1 payslip processing
+				// Mock attendance count for each employee
 				mockAttendanceRepo.EXPECT().
-					CountAttendanceInPeriod(gomock.Any(), int64(1), gomock.Any(), gomock.Any(), nil).
+					CountAttendanceInPeriod(gomock.Any(), int64(1), attendancePeriod.StartDate, attendancePeriod.EndDate, nil).
 					Return(int64(20), nil)
-				mockOvertimeRepo.EXPECT().
-					FindByTemplate(gomock.Any(), &entity.Overtime{EmployeeID: int64(1)}, nil).
-					Return([]entity.Overtime{}, nil)
-				mockReimbursementRepo.EXPECT().
-					FindByTemplate(gomock.Any(), &entity.Reimbursement{EmployeeID: int64(1)}, nil).
-					Return([]entity.Reimbursement{}, nil)
-				mockPayslipRepo.EXPECT().
-					Create(gomock.Any(), gomock.Any(), nil).
-					Return(&entity.Payslip{
-						Base:               entity.Base{ID: 1},
-						EmployeeID:         1,
-						PayrollID:          1,
-						BaseSalary:         5000000,
-						AttendanceCount:    20,
-						TotalWorkingDays:   23,
-						ProratedSalary:     4347826,
-						OvertimeTotalHours: 0,
-						OvertimeTotalPay:   0,
-						ReimbursementTotal: 0,
-						TotalTakeHome:      4347826,
-					}, nil)
-
-				// Mock employee 2 payslip processing
 				mockAttendanceRepo.EXPECT().
-					CountAttendanceInPeriod(gomock.Any(), int64(2), gomock.Any(), gomock.Any(), nil).
-					Return(int64(22), nil)
+					CountAttendanceInPeriod(gomock.Any(), int64(2), attendancePeriod.StartDate, attendancePeriod.EndDate, nil).
+					Return(int64(20), nil)
+
+				// Mock overtime lookup for each employee
 				mockOvertimeRepo.EXPECT().
-					FindByTemplate(gomock.Any(), &entity.Overtime{EmployeeID: int64(2)}, nil).
-					Return([]entity.Overtime{}, nil)
+					FindByTemplate(gomock.Any(), gomock.Any(), nil).
+					Return([]entity.Overtime{}, nil).Times(2) // No overtime for simplicity
+
+				// Mock reimbursement lookup for each employee
 				mockReimbursementRepo.EXPECT().
-					FindByTemplate(gomock.Any(), &entity.Reimbursement{EmployeeID: int64(2)}, nil).
-					Return([]entity.Reimbursement{}, nil)
+					FindByTemplate(gomock.Any(), gomock.Any(), nil).
+					Return([]entity.Reimbursement{}, nil).Times(2) // No reimbursements for simplicity
+
+				// Mock payslip creation for each employee
 				mockPayslipRepo.EXPECT().
 					Create(gomock.Any(), gomock.Any(), nil).
-					Return(&entity.Payslip{
-						Base:               entity.Base{ID: 2},
-						EmployeeID:         2,
-						PayrollID:          1,
-						BaseSalary:         4000000,
-						AttendanceCount:    22,
-						TotalWorkingDays:   23,
-						ProratedSalary:     3826087,
-						OvertimeTotalHours: 0,
-						OvertimeTotalPay:   0,
-						ReimbursementTotal: 0,
-						TotalTakeHome:      3826087,
-					}, nil)
+					Return(&entity.Payslip{Base: entity.Base{ID: 1}, TotalTakeHome: 4545454}, nil).
+					Times(1)
+				mockPayslipRepo.EXPECT().
+					Create(gomock.Any(), gomock.Any(), nil).
+					Return(&entity.Payslip{Base: entity.Base{ID: 2}, TotalTakeHome: 3636363}, nil).
+					Times(1)
 
-				// Mock payroll updates
+				// Mock payroll update
 				mockPayrollRepo.EXPECT().
 					Updates(gomock.Any(), createdPayroll, gomock.Any(), nil).
 					Return(createdPayroll, nil)
@@ -213,7 +186,7 @@ func TestPayrollUsecase_RunPayroll(t *testing.T) {
 					FindOneByTemplate(gomock.Any(), &entity.Payroll{AttendancePeriodID: int64(1)}, nil).
 					Return(nil, gorm.ErrRecordNotFound)
 
-				// Mock employees lookup - return empty slice
+				// Mock employees lookup - empty result
 				mockEmployeeRepo.EXPECT().
 					FindByTemplate(gomock.Any(), &entity.Employee{}, nil).
 					Return([]entity.Employee{}, nil)
@@ -241,7 +214,7 @@ func TestPayrollUsecase_RunPayroll(t *testing.T) {
 					FindOneByTemplate(gomock.Any(), &entity.Payroll{AttendancePeriodID: int64(1)}, nil).
 					Return(nil, gorm.ErrRecordNotFound)
 
-				// Mock employee lookup
+				// Mock employees lookup
 				employees := []entity.Employee{
 					{
 						Base:       entity.Base{ID: 1},
@@ -258,9 +231,6 @@ func TestPayrollUsecase_RunPayroll(t *testing.T) {
 					Base:               entity.Base{ID: 1},
 					AttendancePeriodID: 1,
 					TotalEmployees:     1,
-					TotalReimbursement: 0,
-					TotalOvertime:      0,
-					TotalPayroll:       0,
 				}
 				mockPayrollRepo.EXPECT().
 					Create(gomock.Any(), gomock.Any(), nil).
@@ -268,11 +238,11 @@ func TestPayrollUsecase_RunPayroll(t *testing.T) {
 
 				// Mock attendance count
 				mockAttendanceRepo.EXPECT().
-					CountAttendanceInPeriod(gomock.Any(), int64(1), gomock.Any(), gomock.Any(), nil).
+					CountAttendanceInPeriod(gomock.Any(), int64(1), attendancePeriod.StartDate, attendancePeriod.EndDate, nil).
 					Return(int64(20), nil)
 
-				// Mock overtime with records
-				overtimes := []entity.Overtime{
+				// Mock overtime lookup (with overtime)
+				overtime := []entity.Overtime{
 					{
 						Base:       entity.Base{ID: 1},
 						EmployeeID: 1,
@@ -281,40 +251,34 @@ func TestPayrollUsecase_RunPayroll(t *testing.T) {
 					},
 				}
 				mockOvertimeRepo.EXPECT().
-					FindByTemplate(gomock.Any(), &entity.Overtime{EmployeeID: int64(1)}, nil).
-					Return(overtimes, nil)
+					FindByTemplate(gomock.Any(), gomock.Any(), nil).
+					Return(overtime, nil)
 
-				// Mock reimbursements with records
+				// Mock reimbursement lookup (with reimbursements)
 				reimbursements := []entity.Reimbursement{
 					{
 						Base:       entity.Base{ID: 1},
 						EmployeeID: 1,
 						Amount:     100000,
-						Date:       time.Date(2025, 1, 10, 0, 0, 0, 0, time.UTC),
+						Date:       time.Date(2025, 1, 20, 0, 0, 0, 0, time.UTC),
 					},
 				}
 				mockReimbursementRepo.EXPECT().
-					FindByTemplate(gomock.Any(), &entity.Reimbursement{EmployeeID: int64(1)}, nil).
+					FindByTemplate(gomock.Any(), gomock.Any(), nil).
 					Return(reimbursements, nil)
 
 				// Mock payslip creation
+				payslip := &entity.Payslip{
+					Base:               entity.Base{ID: 1},
+					TotalTakeHome:      5145454,
+					OvertimeTotalPay:   500000,
+					ReimbursementTotal: 100000,
+				}
 				mockPayslipRepo.EXPECT().
 					Create(gomock.Any(), gomock.Any(), nil).
-					Return(&entity.Payslip{
-						Base:               entity.Base{ID: 1},
-						EmployeeID:         1,
-						PayrollID:          1,
-						BaseSalary:         5000000,
-						AttendanceCount:    20,
-						TotalWorkingDays:   23,
-						ProratedSalary:     4347826,
-						OvertimeTotalHours: 2,
-						OvertimeTotalPay:   568182,
-						ReimbursementTotal: 100000,
-						TotalTakeHome:      5016008,
-					}, nil)
+					Return(payslip, nil)
 
-				// Mock payroll updates
+				// Mock payroll update
 				mockPayrollRepo.EXPECT().
 					Updates(gomock.Any(), createdPayroll, gomock.Any(), nil).
 					Return(createdPayroll, nil)

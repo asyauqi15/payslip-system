@@ -148,6 +148,24 @@ func TestPayslipUsecase_GetPayslip(t *testing.T) {
 				return context.WithValue(context.Background(), constant.ContextKeyUserID, int64(1))
 			},
 			setupMock: func() {
+				payrollEntity := &entity.Payroll{
+					Base:               entity.Base{ID: 999},
+					AttendancePeriodID: 1,
+					TotalEmployees:     10,
+					TotalReimbursement: 500000,
+					TotalOvertime:      200000,
+					TotalPayroll:       5000000,
+				}
+				mockPayrollRepo.EXPECT().
+					FindByID(gomock.Any(), uint(999), nil).
+					Return(payrollEntity, nil)
+
+				mockAttendancePeriodRepo.EXPECT().
+					FindByID(gomock.Any(), uint(1), nil).
+					Return(&entity.AttendancePeriod{
+						Base: entity.Base{ID: 1},
+					}, nil)
+
 				// Mock employee lookup
 				employee := &entity.Employee{
 					Base:       entity.Base{ID: 1},
@@ -181,24 +199,6 @@ func TestPayslipUsecase_GetPayslip(t *testing.T) {
 				mockEmployeeRepo.EXPECT().
 					FindOneByTemplate(gomock.Any(), &entity.Employee{UserID: int64(1)}, nil).
 					Return(employee, nil)
-
-				// Mock payslip lookup
-				payslipEntity := &entity.Payslip{
-					Base:               entity.Base{ID: 1},
-					EmployeeID:         1,
-					PayrollID:          1,
-					BaseSalary:         5000000,
-					AttendanceCount:    20,
-					TotalWorkingDays:   22,
-					ProratedSalary:     4545454,
-					OvertimeTotalHours: 10,
-					OvertimeTotalPay:   500000,
-					ReimbursementTotal: 100000,
-					TotalTakeHome:      5145454,
-				}
-				mockPayslipRepo.EXPECT().
-					FindOneByTemplate(gomock.Any(), &entity.Payslip{EmployeeID: int64(1), PayrollID: int64(1)}, nil).
-					Return(payslipEntity, nil)
 
 				// Mock payroll not found
 				mockPayrollRepo.EXPECT().

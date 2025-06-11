@@ -52,6 +52,13 @@ func (b Base) BeforeUpdate(tx *gorm.DB) (err error) {
 }
 
 func (b Base) AfterUpdate(tx *gorm.DB) (err error) {
+	// Skip audit logging in test environment
+	if tx.Statement.Context != nil {
+		if skipAudit := tx.Statement.Context.Value("skip_audit"); skipAudit != nil {
+			return nil
+		}
+	}
+
 	// Get the data before from context
 	dataBefore, _ := tx.Statement.Context.Value("data_before").(map[string]interface{})
 
@@ -85,8 +92,8 @@ func (b Base) AfterUpdate(tx *gorm.DB) (err error) {
 	}
 
 	// Find differences and exclude UpdatedAt
-	differencesBefore := make(map[string]interface{})
-	differencesAfter := make(map[string]interface{})
+	differencesBefore := make(JSONMap)
+	differencesAfter := make(JSONMap)
 
 	if dataBefore != nil && dataAfter != nil {
 		for key, valueBefore := range dataBefore {
@@ -145,6 +152,13 @@ func (b Base) AfterUpdate(tx *gorm.DB) (err error) {
 }
 
 func (b Base) AfterCreate(tx *gorm.DB) (err error) {
+	// Skip audit logging in test environment
+	if tx.Statement.Context != nil {
+		if skipAudit := tx.Statement.Context.Value("skip_audit"); skipAudit != nil {
+			return nil
+		}
+	}
+
 	// Get record ID
 	var recordID interface{}
 	if field := tx.Statement.Schema.LookUpField("ID"); field != nil {

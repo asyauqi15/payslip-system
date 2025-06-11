@@ -31,7 +31,7 @@ func (ap AttendancePeriod) BeforeCreate(tx *gorm.DB) (err error) {
 func (ap AttendancePeriod) BeforeUpdate(tx *gorm.DB) (err error) {
 	var count int64
 	err = tx.Model(&AttendancePeriod{}).
-		Where("id != ? AND start_date =< ? AND end_date >= ?", ap.ID, ap.EndDate, ap.StartDate).
+		Where("id != ? AND start_date <= ? AND end_date >= ?", ap.ID, ap.EndDate, ap.StartDate).
 		Count(&count).Error
 	if err != nil {
 		return err

@@ -121,29 +121,6 @@ func TestAttendanceUsecase_SubmitAttendance(t *testing.T) {
 			expectError: true,
 		},
 		{
-			name:           "weekend attendance",
-			attendanceType: v1.CheckIn,
-			setupContext: func() context.Context {
-				return context.WithValue(context.Background(), constant.ContextKeyUserID, int64(1))
-			},
-			setupMock: func() {
-				employee := &entity.Employee{
-					Base:       entity.Base{ID: 1},
-					UserID:     1,
-					BaseSalary: 5000000,
-				}
-
-				mockEmployeeRepo.EXPECT().
-					FindOneByTemplate(gomock.Any(), &entity.Employee{UserID: int64(1)}, nil).
-					Return(employee, nil)
-			},
-			expectError: func() bool {
-				// This test would fail on weekends, but for simplicity, we'll assume it's a weekday
-				now := time.Now()
-				return now.Weekday() == time.Saturday || now.Weekday() == time.Sunday
-			}(),
-		},
-		{
 			name:           "already checked in today",
 			attendanceType: v1.CheckIn,
 			setupContext: func() context.Context {
