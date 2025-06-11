@@ -14,12 +14,11 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-func TestOvertimeRepository_Create(t *testing.T) {
+func setupOvertimeRepoTest() (*gorm.DB, sqlmock.Sqlmock, repository.OvertimeRepository) {
 	db, mock, err := sqlmock.New()
 	if err != nil {
-		t.Fatalf("Failed to create sqlmock: %v", err)
+		panic(err)
 	}
-	defer db.Close()
 
 	dialector := postgres.New(postgres.Config{
 		Conn:       db,
@@ -30,11 +29,17 @@ func TestOvertimeRepository_Create(t *testing.T) {
 		Logger: logger.Default.LogMode(logger.Silent),
 	})
 	if err != nil {
-		t.Fatalf("Failed to open gorm DB: %v", err)
+		panic(err)
 	}
 
 	baseRepo := &repository.BaseRepositoryImpl[entity.Overtime]{DB: gormDB}
 	repo := repository.NewOvertimeRepository(baseRepo)
+
+	return gormDB, mock, repo
+}
+
+func TestOvertimeRepository_Create(t *testing.T) {
+	_, mock, repo := setupOvertimeRepoTest()
 
 	startTime := time.Date(2025, 1, 1, 18, 0, 0, 0, time.UTC)
 	endTime := time.Date(2025, 1, 1, 20, 0, 0, 0, time.UTC)
@@ -102,26 +107,7 @@ func TestOvertimeRepository_Create(t *testing.T) {
 }
 
 func TestOvertimeRepository_FindByTemplate(t *testing.T) {
-	db, mock, err := sqlmock.New()
-	if err != nil {
-		t.Fatalf("Failed to create sqlmock: %v", err)
-	}
-	defer db.Close()
-
-	dialector := postgres.New(postgres.Config{
-		Conn:       db,
-		DriverName: "postgres",
-	})
-
-	gormDB, err := gorm.Open(dialector, &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Silent),
-	})
-	if err != nil {
-		t.Fatalf("Failed to open gorm DB: %v", err)
-	}
-
-	baseRepo := &repository.BaseRepositoryImpl[entity.Overtime]{DB: gormDB}
-	repo := repository.NewOvertimeRepository(baseRepo)
+	_, mock, repo := setupOvertimeRepoTest()
 
 	template := &entity.Overtime{
 		EmployeeID: 1,
@@ -189,26 +175,7 @@ func TestOvertimeRepository_FindByTemplate(t *testing.T) {
 }
 
 func TestOvertimeRepository_Updates(t *testing.T) {
-	db, mock, err := sqlmock.New()
-	if err != nil {
-		t.Fatalf("Failed to create sqlmock: %v", err)
-	}
-	defer db.Close()
-
-	dialector := postgres.New(postgres.Config{
-		Conn:       db,
-		DriverName: "postgres",
-	})
-
-	gormDB, err := gorm.Open(dialector, &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Silent),
-	})
-	if err != nil {
-		t.Fatalf("Failed to open gorm DB: %v", err)
-	}
-
-	baseRepo := &repository.BaseRepositoryImpl[entity.Overtime]{DB: gormDB}
-	repo := repository.NewOvertimeRepository(baseRepo)
+	_, mock, repo := setupOvertimeRepoTest()
 
 	startTime := time.Date(2025, 1, 1, 18, 0, 0, 0, time.UTC)
 	endTime := time.Date(2025, 1, 1, 20, 0, 0, 0, time.UTC)

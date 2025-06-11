@@ -12,94 +12,44 @@ import (
 	"gorm.io/gorm"
 )
 
+type PayrollTotals struct {
+	TotalPayroll       int64
+	TotalReimbursement int64
+	TotalOvertime      int64
+}
+
 func (u *UsecaseImpl) RunPayroll(ctx context.Context, req v1.PostAdminPayrollsJSONRequestBody) error {
-	// Check if attendance period exists
-	attendancePeriod, err := u.attendancePeriodRepo.FindByID(ctx, uint(req.AttendancePeriodId), nil)
+	attendancePeriod, err := u.validateAndGetAttendancePeriod(ctx, int64(req.AttendancePeriodId))
 	if err != nil {
-		slog.ErrorContext(ctx, "failed to find attendance period", "id", req.AttendancePeriodId, "error", err)
-		return httppkg.NewInternalServerError("failed to find attendance period")
-	}
-	if attendancePeriod == nil {
-		return httppkg.NewNotFoundError("attendance period not found")
+		return err
 	}
 
-	// Check if payroll already exists for this period
-	existingPayroll, err := u.payrollRepo.FindOneByTemplate(ctx, &entity.Payroll{
-		AttendancePeriodID: int64(req.AttendancePeriodId),
-	}, nil)
-	if err != nil && err != gorm.ErrRecordNotFound {
-		slog.ErrorContext(ctx, "failed to check existing payroll", "attendance_period_id", req.AttendancePeriodId, "error", err)
-		return httppkg.NewInternalServerError("failed to check existing payroll")
-	}
-	if existingPayroll != nil {
-		return httppkg.NewBadRequestError("payroll already exists for this attendance period")
+	if err := u.validatePayrollNotExists(ctx, int64(req.AttendancePeriodId)); err != nil {
+		return err
 	}
 
-	// Get all employees
-	employees, err := u.employeeRepo.FindByTemplate(ctx, &entity.Employee{}, nil)
+	employees, err := u.getEmployees(ctx)
 	if err != nil {
-		slog.ErrorContext(ctx, "failed to get employees", "error", err)
-		return httppkg.NewInternalServerError("failed to get employees")
+		return err
 	}
 
-	if len(employees) == 0 {
-		return httppkg.NewBadRequestError("no employees found")
-	}
-
-	// Calculate total working days in the period
 	totalWorkingDays := u.calculateWorkingDays(attendancePeriod.StartDate, attendancePeriod.EndDate)
 
-	// Create payroll record
-	payroll := &entity.Payroll{
-		AttendancePeriodID: int64(req.AttendancePeriodId),
-		TotalEmployees:     int64(len(employees)),
-		TotalReimbursement: 0,
-		TotalOvertime:      0,
-		TotalPayroll:       0,
-	}
-
-	createdPayroll, err := u.payrollRepo.Create(ctx, payroll, nil)
+	createdPayroll, err := u.createPayrollRecord(ctx, int64(req.AttendancePeriodId), len(employees))
 	if err != nil {
-		slog.ErrorContext(ctx, "failed to create payroll", "error", err)
-		return httppkg.NewInternalServerError("failed to create payroll")
+		return err
 	}
 
-	var totalPayrollAmount int64
-	var totalReimbursementAmount int64
-	var totalOvertimeAmount int64
-
-	// Process each employee
-	for _, employee := range employees {
-		payslip, err := u.processEmployeePayslip(ctx, employee, createdPayroll.ID, attendancePeriod, totalWorkingDays)
-		if err != nil {
-			slog.ErrorContext(ctx, "failed to process employee payslip", "employee_id", employee.ID, "error", err)
-			return fmt.Errorf("failed to process employee %d payslip: %w", employee.ID, err)
-		}
-
-		totalPayrollAmount += payslip.TotalTakeHome
-		totalReimbursementAmount += payslip.ReimbursementTotal
-		totalOvertimeAmount += payslip.OvertimeTotalPay
-	}
-
-	// Update payroll totals
-	updatedPayroll := entity.Payroll{
-		TotalReimbursement: totalReimbursementAmount,
-		TotalOvertime:      totalOvertimeAmount,
-		TotalPayroll:       totalPayrollAmount,
-	}
-
-	_, err = u.payrollRepo.Updates(ctx, createdPayroll, updatedPayroll, nil)
+	payrollTotals, err := u.processAllEmployeePayslips(ctx, employees, createdPayroll.ID, attendancePeriod, totalWorkingDays)
 	if err != nil {
-		slog.ErrorContext(ctx, "failed to update payroll totals", "payroll_id", createdPayroll.ID, "error", err)
-		return httppkg.NewInternalServerError("failed to update payroll totals")
+		return err
 	}
 
-	slog.InfoContext(ctx, "payroll generated successfully",
-		"payroll_id", createdPayroll.ID,
-		"attendance_period_id", req.AttendancePeriodId,
-		"total_employees", len(employees),
-		"total_payout", totalPayrollAmount)
+	if err := u.updatePayrollTotals(ctx, createdPayroll, payrollTotals); err != nil {
+		return err
+	}
 
+	u.logPayrollSuccess(ctx, createdPayroll.ID, int64(req.AttendancePeriodId), len(employees), payrollTotals.TotalPayroll)
 	return nil
 }
 
@@ -232,4 +182,104 @@ func (u *UsecaseImpl) calculateReimbursementTotal(ctx context.Context, employeeI
 	}
 
 	return total, nil
+}
+
+func (u *UsecaseImpl) validateAndGetAttendancePeriod(ctx context.Context, attendancePeriodID int64) (*entity.AttendancePeriod, error) {
+	attendancePeriod, err := u.attendancePeriodRepo.FindByID(ctx, uint(attendancePeriodID), nil)
+	if err != nil {
+		slog.ErrorContext(ctx, "failed to find attendance period", "id", attendancePeriodID, "error", err)
+		return nil, httppkg.NewInternalServerError("failed to find attendance period")
+	}
+	if attendancePeriod == nil {
+		return nil, httppkg.NewNotFoundError("attendance period not found")
+	}
+	return attendancePeriod, nil
+}
+
+func (u *UsecaseImpl) validatePayrollNotExists(ctx context.Context, attendancePeriodID int64) error {
+	existingPayroll, err := u.payrollRepo.FindOneByTemplate(ctx, &entity.Payroll{
+		AttendancePeriodID: attendancePeriodID,
+	}, nil)
+	if err != nil && err != gorm.ErrRecordNotFound {
+		slog.ErrorContext(ctx, "failed to check existing payroll", "attendance_period_id", attendancePeriodID, "error", err)
+		return httppkg.NewInternalServerError("failed to check existing payroll")
+	}
+	if existingPayroll != nil {
+		return httppkg.NewBadRequestError("payroll already exists for this attendance period")
+	}
+	return nil
+}
+
+func (u *UsecaseImpl) getEmployees(ctx context.Context) ([]entity.Employee, error) {
+	employees, err := u.employeeRepo.FindByTemplate(ctx, &entity.Employee{}, nil)
+	if err != nil {
+		slog.ErrorContext(ctx, "failed to get employees", "error", err)
+		return nil, httppkg.NewInternalServerError("failed to get employees")
+	}
+
+	if len(employees) == 0 {
+		return nil, httppkg.NewBadRequestError("no employees found")
+	}
+
+	return employees, nil
+}
+
+func (u *UsecaseImpl) createPayrollRecord(ctx context.Context, attendancePeriodID int64, employeeCount int) (*entity.Payroll, error) {
+	payroll := &entity.Payroll{
+		AttendancePeriodID: attendancePeriodID,
+		TotalEmployees:     int64(employeeCount),
+		TotalReimbursement: 0,
+		TotalOvertime:      0,
+		TotalPayroll:       0,
+	}
+
+	createdPayroll, err := u.payrollRepo.Create(ctx, payroll, nil)
+	if err != nil {
+		slog.ErrorContext(ctx, "failed to create payroll", "error", err)
+		return nil, httppkg.NewInternalServerError("failed to create payroll")
+	}
+
+	return createdPayroll, nil
+}
+
+func (u *UsecaseImpl) processAllEmployeePayslips(ctx context.Context, employees []entity.Employee, payrollID int64, attendancePeriod *entity.AttendancePeriod, totalWorkingDays int) (*PayrollTotals, error) {
+	totals := &PayrollTotals{}
+
+	for _, employee := range employees {
+		payslip, err := u.processEmployeePayslip(ctx, employee, payrollID, attendancePeriod, totalWorkingDays)
+		if err != nil {
+			slog.ErrorContext(ctx, "failed to process employee payslip", "employee_id", employee.ID, "error", err)
+			return nil, fmt.Errorf("failed to process employee %d payslip: %w", employee.ID, err)
+		}
+
+		totals.TotalPayroll += payslip.TotalTakeHome
+		totals.TotalReimbursement += payslip.ReimbursementTotal
+		totals.TotalOvertime += payslip.OvertimeTotalPay
+	}
+
+	return totals, nil
+}
+
+func (u *UsecaseImpl) updatePayrollTotals(ctx context.Context, payroll *entity.Payroll, totals *PayrollTotals) error {
+	updatedPayroll := entity.Payroll{
+		TotalReimbursement: totals.TotalReimbursement,
+		TotalOvertime:      totals.TotalOvertime,
+		TotalPayroll:       totals.TotalPayroll,
+	}
+
+	_, err := u.payrollRepo.Updates(ctx, payroll, updatedPayroll, nil)
+	if err != nil {
+		slog.ErrorContext(ctx, "failed to update payroll totals", "payroll_id", payroll.ID, "error", err)
+		return httppkg.NewInternalServerError("failed to update payroll totals")
+	}
+
+	return nil
+}
+
+func (u *UsecaseImpl) logPayrollSuccess(ctx context.Context, payrollID int64, attendancePeriodID int64, employeeCount int, totalPayout int64) {
+	slog.InfoContext(ctx, "payroll generated successfully",
+		"payroll_id", payrollID,
+		"attendance_period_id", attendancePeriodID,
+		"total_employees", employeeCount,
+		"total_payout", totalPayout)
 }

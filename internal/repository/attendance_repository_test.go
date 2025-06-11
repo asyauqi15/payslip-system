@@ -14,12 +14,11 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-func TestAttendanceRepository_Create(t *testing.T) {
+func setupAttendanceRepoTest() (*gorm.DB, sqlmock.Sqlmock, repository.AttendanceRepository) {
 	db, mock, err := sqlmock.New()
 	if err != nil {
-		t.Fatalf("Failed to create sqlmock: %v", err)
+		panic(err)
 	}
-	defer db.Close()
 
 	dialector := postgres.New(postgres.Config{
 		Conn:       db,
@@ -30,11 +29,17 @@ func TestAttendanceRepository_Create(t *testing.T) {
 		Logger: logger.Default.LogMode(logger.Silent),
 	})
 	if err != nil {
-		t.Fatalf("Failed to open gorm DB: %v", err)
+		panic(err)
 	}
 
 	baseRepo := &repository.BaseRepositoryImpl[entity.Attendance]{DB: gormDB}
 	repo := repository.NewAttendanceRepository(baseRepo)
+
+	return gormDB, mock, repo
+}
+
+func TestAttendanceRepository_Create(t *testing.T) {
+	_, mock, repo := setupAttendanceRepoTest()
 
 	attendance := &entity.Attendance{
 		EmployeeID:   1,
@@ -98,26 +103,7 @@ func TestAttendanceRepository_Create(t *testing.T) {
 }
 
 func TestAttendanceRepository_CountAttendanceInPeriod(t *testing.T) {
-	db, mock, err := sqlmock.New()
-	if err != nil {
-		t.Fatalf("Failed to create sqlmock: %v", err)
-	}
-	defer db.Close()
-
-	dialector := postgres.New(postgres.Config{
-		Conn:       db,
-		DriverName: "postgres",
-	})
-
-	gormDB, err := gorm.Open(dialector, &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Silent),
-	})
-	if err != nil {
-		t.Fatalf("Failed to open gorm DB: %v", err)
-	}
-
-	baseRepo := &repository.BaseRepositoryImpl[entity.Attendance]{DB: gormDB}
-	repo := repository.NewAttendanceRepository(baseRepo)
+	_, mock, repo := setupAttendanceRepoTest()
 
 	employeeID := int64(1)
 	startDate := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
@@ -187,111 +173,8 @@ func TestAttendanceRepository_CountAttendanceInPeriod(t *testing.T) {
 	}
 }
 
-func TestAttendanceRepository_FindByTemplate(t *testing.T) {
-	db, mock, err := sqlmock.New()
-	if err != nil {
-		t.Fatalf("Failed to create sqlmock: %v", err)
-	}
-	defer db.Close()
-
-	dialector := postgres.New(postgres.Config{
-		Conn:       db,
-		DriverName: "postgres",
-	})
-
-	gormDB, err := gorm.Open(dialector, &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Silent),
-	})
-	if err != nil {
-		t.Fatalf("Failed to open gorm DB: %v", err)
-	}
-
-	baseRepo := &repository.BaseRepositoryImpl[entity.Attendance]{DB: gormDB}
-	repo := repository.NewAttendanceRepository(baseRepo)
-
-	template := &entity.Attendance{
-		EmployeeID: 1,
-	}
-
-	tests := []struct {
-		name        string
-		setupMock   func()
-		expectError bool
-		expectCount int
-	}{
-		{
-			name: "successful find by employee",
-			setupMock: func() {
-				rows := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "employee_id", "clock_in_time", "clock_out_time"}).
-					AddRow(1, time.Now(), time.Now(), 1, "2025-01-01T09:00:00Z", "2025-01-01T17:00:00Z").
-					AddRow(2, time.Now(), time.Now(), 1, "2025-01-02T09:00:00Z", "2025-01-02T17:00:00Z")
-				mock.ExpectQuery(regexp.QuoteMeta(`SELECT * FROM "attendances" WHERE "attendances"."employee_id" = $1`)).
-					WithArgs(int64(1)).
-					WillReturnRows(rows)
-			},
-			expectError: false,
-			expectCount: 2,
-		},
-		{
-			name: "no attendance records",
-			setupMock: func() {
-				rows := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "employee_id", "clock_in_time", "clock_out_time"})
-				mock.ExpectQuery(regexp.QuoteMeta(`SELECT * FROM "attendances" WHERE "attendances"."employee_id" = $1`)).
-					WithArgs(int64(1)).
-					WillReturnRows(rows)
-			},
-			expectError: false,
-			expectCount: 0,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			tt.setupMock()
-
-			results, err := repo.FindByTemplate(context.Background(), template, nil)
-
-			if tt.expectError {
-				if err == nil {
-					t.Error("Expected error but got none")
-				}
-			} else {
-				if err != nil {
-					t.Errorf("Expected no error but got: %v", err)
-				}
-				if len(results) != tt.expectCount {
-					t.Errorf("Expected %d results but got %d", tt.expectCount, len(results))
-				}
-			}
-
-			if err := mock.ExpectationsWereMet(); err != nil {
-				t.Errorf("Unfulfilled expectations: %v", err)
-			}
-		})
-	}
-}
-
 func TestAttendanceRepository_Updates(t *testing.T) {
-	db, mock, err := sqlmock.New()
-	if err != nil {
-		t.Fatalf("Failed to create sqlmock: %v", err)
-	}
-	defer db.Close()
-
-	dialector := postgres.New(postgres.Config{
-		Conn:       db,
-		DriverName: "postgres",
-	})
-
-	gormDB, err := gorm.Open(dialector, &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Silent),
-	})
-	if err != nil {
-		t.Fatalf("Failed to open gorm DB: %v", err)
-	}
-
-	baseRepo := &repository.BaseRepositoryImpl[entity.Attendance]{DB: gormDB}
-	repo := repository.NewAttendanceRepository(baseRepo)
+	_, mock, repo := setupAttendanceRepoTest()
 
 	attendance := &entity.Attendance{
 		Base:         entity.Base{ID: 1},

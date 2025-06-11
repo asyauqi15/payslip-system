@@ -14,12 +14,11 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-func TestUserRepository_Create(t *testing.T) {
+func setupUserRepoTest() (*gorm.DB, sqlmock.Sqlmock, repository.UserRepository) {
 	db, mock, err := sqlmock.New()
 	if err != nil {
-		t.Fatalf("Failed to create sqlmock: %v", err)
+		panic(err)
 	}
-	defer db.Close()
 
 	dialector := postgres.New(postgres.Config{
 		Conn:       db,
@@ -30,11 +29,17 @@ func TestUserRepository_Create(t *testing.T) {
 		Logger: logger.Default.LogMode(logger.Silent),
 	})
 	if err != nil {
-		t.Fatalf("Failed to open gorm DB: %v", err)
+		panic(err)
 	}
 
 	baseRepo := &repository.BaseRepositoryImpl[entity.User]{DB: gormDB}
 	repo := repository.NewUserRepository(baseRepo)
+
+	return gormDB, mock, repo
+}
+
+func TestUserRepository_Create(t *testing.T) {
+	_, mock, repo := setupUserRepoTest()
 
 	user := &entity.User{
 		Username:     "testuser",
