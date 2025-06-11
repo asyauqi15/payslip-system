@@ -10,6 +10,7 @@ import (
 type Registry struct {
 	Auth             auth.Handler
 	AttendancePeriod admin.AttendancePeriodHandler
+	Payroll          admin.PayrollHandler
 	Attendance       employee.AttendanceHandler
 	Overtime         employee.OvertimeHandler
 	Reimbursement    employee.ReimbursementHandler
@@ -19,6 +20,7 @@ func InitializeHandler(usecase *usecase.Registry) *Registry {
 	return &Registry{
 		Auth:             auth.NewHandler(usecase.Auth),
 		AttendancePeriod: admin.NewAttendancePeriodHandler(usecase.CreateAttendancePeriod),
+		Payroll:          admin.NewPayrollHandler(usecase.RunPayroll),
 		Attendance:       employee.NewAttendanceHandler(usecase.SubmitAttendance),
 		Overtime:         employee.NewOvertimeHandler(usecase.SubmitOvertime),
 		Reimbursement:    employee.NewReimbursementHandler(usecase.SubmitReimbursement),

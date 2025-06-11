@@ -36,6 +36,7 @@ func NewRESTServer(
 		r.Use(middleware.RequireAdminRole)
 
 		r.Post("/attendance-periods", h.AttendancePeriod.CreateAttendancePeriod)
+		r.Post("/payrolls", h.Payroll.RunPayroll)
 	})
 
 	// Employee routes (require authentication)

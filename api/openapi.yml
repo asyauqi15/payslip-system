@@ -157,8 +157,7 @@ paths:
               required: [attendance_period_id]
               properties:
                 attendance_period_id:
-                  type: string
-                  format: uuid
+                  type: integer
       responses:
         200:
           description: Payroll generated

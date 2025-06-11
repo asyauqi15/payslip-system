@@ -9,7 +9,7 @@ type Payslip struct {
 	TotalWorkingDays   int   `gorm:"not null"`
 	ProratedSalary     int64 `gorm:"not null"`
 	OvertimeTotalHours int   `gorm:"not null;default:0"`
-	OvertimeTotalPay   int64 `gorm:"not null;default:0"`
+	OvertimeTotalPay   int64 `gorm:"column:overtime_total_amount;not null;default:0"`
 	ReimbursementTotal int64 `gorm:"not null"`
 	TotalTakeHome      int64 `gorm:"not null"`
 }
