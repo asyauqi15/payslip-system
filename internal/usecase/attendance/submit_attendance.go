@@ -7,32 +7,12 @@ import (
 
 	"github.com/asyauqi15/payslip-system/internal/constant"
 	"github.com/asyauqi15/payslip-system/internal/entity"
-	"github.com/asyauqi15/payslip-system/internal/repository"
 	httppkg "github.com/asyauqi15/payslip-system/pkg/http"
 	v1 "github.com/asyauqi15/payslip-system/pkg/openapi/v1"
 	"github.com/spf13/cast"
 )
 
-type SubmitAttendanceUsecase interface {
-	SubmitAttendance(ctx context.Context, attendanceType v1.PostEmployeeAttendanceJSONBodyAttendanceType) error
-}
-
-type SubmitAttendanceUsecaseImpl struct {
-	attendanceRepo repository.AttendanceRepository
-	employeeRepo   repository.EmployeeRepository
-}
-
-func NewSubmitAttendanceUsecase(
-	attendanceRepo repository.AttendanceRepository,
-	employeeRepo repository.EmployeeRepository,
-) SubmitAttendanceUsecase {
-	return &SubmitAttendanceUsecaseImpl{
-		attendanceRepo: attendanceRepo,
-		employeeRepo:   employeeRepo,
-	}
-}
-
-func (u *SubmitAttendanceUsecaseImpl) SubmitAttendance(ctx context.Context, attendanceType v1.PostEmployeeAttendanceJSONBodyAttendanceType) error {
+func (u *UsecaseImpl) SubmitAttendance(ctx context.Context, attendanceType v1.PostEmployeeAttendanceJSONBodyAttendanceType) error {
 	// Get the user ID from context
 	userIDStr := ctx.Value(constant.ContextKeyUserID)
 	if userIDStr == nil {
@@ -70,7 +50,7 @@ func (u *SubmitAttendanceUsecaseImpl) SubmitAttendance(ctx context.Context, atte
 	}
 }
 
-func (u *SubmitAttendanceUsecaseImpl) handleCheckIn(ctx context.Context, employeeID int64, currentTime, today string) error {
+func (u *UsecaseImpl) handleCheckIn(ctx context.Context, employeeID int64, currentTime, today string) error {
 	// Check if there's already a check-in for today
 	existingAttendances, err := u.attendanceRepo.FindByTemplate(ctx, &entity.Attendance{EmployeeID: employeeID}, nil)
 	if err != nil {
@@ -104,7 +84,7 @@ func (u *SubmitAttendanceUsecaseImpl) handleCheckIn(ctx context.Context, employe
 	return nil
 }
 
-func (u *SubmitAttendanceUsecaseImpl) handleCheckOut(ctx context.Context, employeeID int64, currentTime, today string) error {
+func (u *UsecaseImpl) handleCheckOut(ctx context.Context, employeeID int64, currentTime, today string) error {
 	// Find today's attendance record that has check-in but no check-out
 	existingAttendances, err := u.attendanceRepo.FindByTemplate(ctx, &entity.Attendance{EmployeeID: employeeID}, nil)
 	if err != nil {

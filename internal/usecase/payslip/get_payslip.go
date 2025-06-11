@@ -7,42 +7,13 @@ import (
 
 	"github.com/asyauqi15/payslip-system/internal/constant"
 	"github.com/asyauqi15/payslip-system/internal/entity"
-	"github.com/asyauqi15/payslip-system/internal/repository"
 	httppkg "github.com/asyauqi15/payslip-system/pkg/http"
 	v1 "github.com/asyauqi15/payslip-system/pkg/openapi/v1"
 	openapi_types "github.com/oapi-codegen/runtime/types"
 	"github.com/spf13/cast"
 )
 
-type GetPayslipUsecase interface {
-	GetPayslip(ctx context.Context, payrollID int64) (*v1.PayslipResponse, error)
-}
-
-type GetPayslipUsecaseImpl struct {
-	payslipRepo          repository.PayslipRepository
-	payrollRepo          repository.PayrollRepository
-	employeeRepo         repository.EmployeeRepository
-	reimbursementRepo    repository.ReimbursementRepository
-	attendancePeriodRepo repository.AttendancePeriodRepository
-}
-
-func NewGetPayslipUsecase(
-	payslipRepo repository.PayslipRepository,
-	payrollRepo repository.PayrollRepository,
-	employeeRepo repository.EmployeeRepository,
-	reimbursementRepo repository.ReimbursementRepository,
-	attendancePeriodRepo repository.AttendancePeriodRepository,
-) GetPayslipUsecase {
-	return &GetPayslipUsecaseImpl{
-		payslipRepo:          payslipRepo,
-		payrollRepo:          payrollRepo,
-		employeeRepo:         employeeRepo,
-		reimbursementRepo:    reimbursementRepo,
-		attendancePeriodRepo: attendancePeriodRepo,
-	}
-}
-
-func (u *GetPayslipUsecaseImpl) GetPayslip(ctx context.Context, payrollID int64) (*v1.PayslipResponse, error) {
+func (u *UsecaseImpl) GetPayslip(ctx context.Context, payrollID int64) (*v1.PayslipResponse, error) {
 	// Get employee ID from context
 	userID := ctx.Value(constant.ContextKeyUserID)
 	if userID == nil {

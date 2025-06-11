@@ -7,35 +7,12 @@ import (
 
 	"github.com/asyauqi15/payslip-system/internal/constant"
 	"github.com/asyauqi15/payslip-system/internal/entity"
-	"github.com/asyauqi15/payslip-system/internal/repository"
 	httppkg "github.com/asyauqi15/payslip-system/pkg/http"
 	v1 "github.com/asyauqi15/payslip-system/pkg/openapi/v1"
 	"github.com/spf13/cast"
 )
 
-type SubmitOvertimeUsecase interface {
-	SubmitOvertime(ctx context.Context, req v1.OvertimeRequest) error
-}
-
-type SubmitOvertimeUsecaseImpl struct {
-	overtimeRepo   repository.OvertimeRepository
-	employeeRepo   repository.EmployeeRepository
-	attendanceRepo repository.AttendanceRepository
-}
-
-func NewSubmitOvertimeUsecase(
-	overtimeRepo repository.OvertimeRepository,
-	employeeRepo repository.EmployeeRepository,
-	attendanceRepo repository.AttendanceRepository,
-) SubmitOvertimeUsecase {
-	return &SubmitOvertimeUsecaseImpl{
-		overtimeRepo:   overtimeRepo,
-		employeeRepo:   employeeRepo,
-		attendanceRepo: attendanceRepo,
-	}
-}
-
-func (u *SubmitOvertimeUsecaseImpl) SubmitOvertime(ctx context.Context, req v1.OvertimeRequest) error {
+func (u *UsecaseImpl) SubmitOvertime(ctx context.Context, req v1.OvertimeRequest) error {
 	// Get the user ID from context
 	userIDStr := ctx.Value(constant.ContextKeyUserID)
 	if userIDStr == nil {
@@ -106,7 +83,7 @@ func (u *SubmitOvertimeUsecaseImpl) SubmitOvertime(ctx context.Context, req v1.O
 	return nil
 }
 
-func (u *SubmitOvertimeUsecaseImpl) validateWeekdayOvertime(ctx context.Context, startTime time.Time) error {
+func (u *UsecaseImpl) validateWeekdayOvertime(ctx context.Context, startTime time.Time) error {
 	// Check if overtime starts after 5PM (17:00)
 	hour := startTime.Hour()
 	if hour < 17 {
@@ -116,7 +93,7 @@ func (u *SubmitOvertimeUsecaseImpl) validateWeekdayOvertime(ctx context.Context,
 	return nil
 }
 
-func (u *SubmitOvertimeUsecaseImpl) validateOvertimeConflicts(ctx context.Context, employeeID int64, startTime, endTime time.Time, date string) error {
+func (u *UsecaseImpl) validateOvertimeConflicts(ctx context.Context, employeeID int64, startTime, endTime time.Time, date string) error {
 	// Get all existing overtimes for the employee
 	existingOvertimes, err := u.overtimeRepo.FindByTemplate(ctx, &entity.Overtime{EmployeeID: employeeID}, nil)
 	if err != nil {

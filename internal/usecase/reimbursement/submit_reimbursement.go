@@ -7,32 +7,12 @@ import (
 
 	"github.com/asyauqi15/payslip-system/internal/constant"
 	"github.com/asyauqi15/payslip-system/internal/entity"
-	"github.com/asyauqi15/payslip-system/internal/repository"
 	httppkg "github.com/asyauqi15/payslip-system/pkg/http"
 	v1 "github.com/asyauqi15/payslip-system/pkg/openapi/v1"
 	"github.com/spf13/cast"
 )
 
-type SubmitReimbursementUsecase interface {
-	SubmitReimbursement(ctx context.Context, req v1.ReimbursementRequest) error
-}
-
-type SubmitReimbursementUsecaseImpl struct {
-	reimbursementRepo repository.ReimbursementRepository
-	employeeRepo      repository.EmployeeRepository
-}
-
-func NewSubmitReimbursementUsecase(
-	reimbursementRepo repository.ReimbursementRepository,
-	employeeRepo repository.EmployeeRepository,
-) SubmitReimbursementUsecase {
-	return &SubmitReimbursementUsecaseImpl{
-		reimbursementRepo: reimbursementRepo,
-		employeeRepo:      employeeRepo,
-	}
-}
-
-func (u *SubmitReimbursementUsecaseImpl) SubmitReimbursement(ctx context.Context, req v1.ReimbursementRequest) error {
+func (u *UsecaseImpl) SubmitReimbursement(ctx context.Context, req v1.ReimbursementRequest) error {
 	// Get the user ID from context
 	userIDStr := ctx.Value(constant.ContextKeyUserID)
 	if userIDStr == nil {

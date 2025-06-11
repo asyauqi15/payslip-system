@@ -5,26 +5,11 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/asyauqi15/payslip-system/internal/usecase/overtime"
 	v1 "github.com/asyauqi15/payslip-system/pkg/openapi/v1"
 	"github.com/go-chi/render"
 )
 
-type OvertimeHandler interface {
-	SubmitOvertime(w http.ResponseWriter, r *http.Request)
-}
-
-type OvertimeHandlerImpl struct {
-	submitOvertimeUsecase overtime.SubmitOvertimeUsecase
-}
-
-func NewOvertimeHandler(submitOvertimeUsecase overtime.SubmitOvertimeUsecase) OvertimeHandler {
-	return &OvertimeHandlerImpl{
-		submitOvertimeUsecase: submitOvertimeUsecase,
-	}
-}
-
-func (h *OvertimeHandlerImpl) SubmitOvertime(w http.ResponseWriter, r *http.Request) {
+func (h *HandlerImpl) SubmitOvertime(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	var req v1.PostEmployeeOvertimeJSONRequestBody
@@ -37,7 +22,7 @@ func (h *OvertimeHandlerImpl) SubmitOvertime(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	err := h.submitOvertimeUsecase.SubmitOvertime(ctx, req)
+	err := h.overtimeUsecase.SubmitOvertime(ctx, req)
 	if err != nil {
 		slog.ErrorContext(ctx, "failed to submit overtime", "error", err)
 		resp := &v1.DefaultErrorResponse{}

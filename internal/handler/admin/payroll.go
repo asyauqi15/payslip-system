@@ -6,33 +6,12 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/asyauqi15/payslip-system/internal/usecase/payroll"
 	v1 "github.com/asyauqi15/payslip-system/pkg/openapi/v1"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
 )
 
-type PayrollHandler interface {
-	RunPayroll(w http.ResponseWriter, r *http.Request)
-	GetPayrollSummary(w http.ResponseWriter, r *http.Request)
-}
-
-type PayrollHandlerImpl struct {
-	runPayrollUsecase        payroll.RunPayrollUsecase
-	getPayrollSummaryUsecase payroll.GetPayrollSummaryUsecase
-}
-
-func NewPayrollHandler(
-	runPayrollUsecase payroll.RunPayrollUsecase,
-	getPayrollSummaryUsecase payroll.GetPayrollSummaryUsecase,
-) PayrollHandler {
-	return &PayrollHandlerImpl{
-		runPayrollUsecase:        runPayrollUsecase,
-		getPayrollSummaryUsecase: getPayrollSummaryUsecase,
-	}
-}
-
-func (h *PayrollHandlerImpl) RunPayroll(w http.ResponseWriter, r *http.Request) {
+func (h *HandlerImpl) RunPayroll(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	var req v1.PostAdminPayrollsJSONRequestBody
@@ -45,7 +24,7 @@ func (h *PayrollHandlerImpl) RunPayroll(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	err := h.runPayrollUsecase.RunPayroll(ctx, req)
+	err := h.payrollUsecase.RunPayroll(ctx, req)
 	if err != nil {
 		slog.ErrorContext(ctx, "failed to run payroll", "error", err)
 		resp := &v1.DefaultErrorResponse{}
@@ -64,7 +43,7 @@ func (h *PayrollHandlerImpl) RunPayroll(w http.ResponseWriter, r *http.Request) 
 	w.WriteHeader(http.StatusCreated)
 }
 
-func (h *PayrollHandlerImpl) GetPayrollSummary(w http.ResponseWriter, r *http.Request) {
+func (h *HandlerImpl) GetPayrollSummary(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	// Get payroll ID from URL path
@@ -79,7 +58,7 @@ func (h *PayrollHandlerImpl) GetPayrollSummary(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	summary, err := h.getPayrollSummaryUsecase.GetPayrollSummary(ctx, payrollID)
+	summary, err := h.payrollUsecase.GetPayrollSummary(ctx, payrollID)
 	if err != nil {
 		slog.ErrorContext(ctx, "failed to get payroll summary", "payroll_id", payrollID, "error", err)
 		resp := &v1.DefaultErrorResponse{}

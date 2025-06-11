@@ -7,46 +7,11 @@ import (
 	"time"
 
 	"github.com/asyauqi15/payslip-system/internal/entity"
-	"github.com/asyauqi15/payslip-system/internal/repository"
 	httppkg "github.com/asyauqi15/payslip-system/pkg/http"
 	v1 "github.com/asyauqi15/payslip-system/pkg/openapi/v1"
 )
 
-type RunPayrollUsecase interface {
-	RunPayroll(ctx context.Context, req v1.PostAdminPayrollsJSONRequestBody) error
-}
-
-type RunPayrollUsecaseImpl struct {
-	payrollRepo          repository.PayrollRepository
-	payslipRepo          repository.PayslipRepository
-	employeeRepo         repository.EmployeeRepository
-	attendanceRepo       repository.AttendanceRepository
-	attendancePeriodRepo repository.AttendancePeriodRepository
-	overtimeRepo         repository.OvertimeRepository
-	reimbursementRepo    repository.ReimbursementRepository
-}
-
-func NewRunPayrollUsecase(
-	payrollRepo repository.PayrollRepository,
-	payslipRepo repository.PayslipRepository,
-	employeeRepo repository.EmployeeRepository,
-	attendanceRepo repository.AttendanceRepository,
-	attendancePeriodRepo repository.AttendancePeriodRepository,
-	overtimeRepo repository.OvertimeRepository,
-	reimbursementRepo repository.ReimbursementRepository,
-) RunPayrollUsecase {
-	return &RunPayrollUsecaseImpl{
-		payrollRepo:          payrollRepo,
-		payslipRepo:          payslipRepo,
-		employeeRepo:         employeeRepo,
-		attendanceRepo:       attendanceRepo,
-		attendancePeriodRepo: attendancePeriodRepo,
-		overtimeRepo:         overtimeRepo,
-		reimbursementRepo:    reimbursementRepo,
-	}
-}
-
-func (u *RunPayrollUsecaseImpl) RunPayroll(ctx context.Context, req v1.PostAdminPayrollsJSONRequestBody) error {
+func (u *UsecaseImpl) RunPayroll(ctx context.Context, req v1.PostAdminPayrollsJSONRequestBody) error {
 	// Check if attendance period exists
 	attendancePeriod, err := u.attendancePeriodRepo.FindByID(ctx, uint(req.AttendancePeriodId), nil)
 	if err != nil {
@@ -137,7 +102,7 @@ func (u *RunPayrollUsecaseImpl) RunPayroll(ctx context.Context, req v1.PostAdmin
 	return nil
 }
 
-func (u *RunPayrollUsecaseImpl) processEmployeePayslip(ctx context.Context, employee entity.Employee, payrollID int64, attendancePeriod *entity.AttendancePeriod, totalWorkingDays int) (*entity.Payslip, error) {
+func (u *UsecaseImpl) processEmployeePayslip(ctx context.Context, employee entity.Employee, payrollID int64, attendancePeriod *entity.AttendancePeriod, totalWorkingDays int) (*entity.Payslip, error) {
 	// Count employee attendance
 	attendanceCount, err := u.countEmployeeAttendance(ctx, employee.ID, attendancePeriod.StartDate, attendancePeriod.EndDate)
 	if err != nil {
@@ -184,7 +149,7 @@ func (u *RunPayrollUsecaseImpl) processEmployeePayslip(ctx context.Context, empl
 	return createdPayslip, nil
 }
 
-func (u *RunPayrollUsecaseImpl) calculateWorkingDays(startDate, endDate time.Time) int {
+func (u *UsecaseImpl) calculateWorkingDays(startDate, endDate time.Time) int {
 	count := 0
 	current := startDate
 
@@ -199,7 +164,7 @@ func (u *RunPayrollUsecaseImpl) calculateWorkingDays(startDate, endDate time.Tim
 	return count
 }
 
-func (u *RunPayrollUsecaseImpl) countEmployeeAttendance(ctx context.Context, employeeID int64, startDate, endDate time.Time) (int, error) {
+func (u *UsecaseImpl) countEmployeeAttendance(ctx context.Context, employeeID int64, startDate, endDate time.Time) (int, error) {
 	// Use repository's count method for efficient counting
 	count, err := u.attendanceRepo.CountAttendanceInPeriod(ctx, employeeID, startDate, endDate, nil)
 	if err != nil {
@@ -209,14 +174,14 @@ func (u *RunPayrollUsecaseImpl) countEmployeeAttendance(ctx context.Context, emp
 	return int(count), nil
 }
 
-func (u *RunPayrollUsecaseImpl) calculateProratedSalary(baseSalary int64, attendanceCount, totalWorkingDays int) int64 {
+func (u *UsecaseImpl) calculateProratedSalary(baseSalary int64, attendanceCount, totalWorkingDays int) int64 {
 	if totalWorkingDays == 0 {
 		return 0
 	}
 	return baseSalary * int64(attendanceCount) / int64(totalWorkingDays)
 }
 
-func (u *RunPayrollUsecaseImpl) calculateOvertimePay(ctx context.Context, employeeID, baseSalary int64, startDate, endDate time.Time) (int, int64, error) {
+func (u *UsecaseImpl) calculateOvertimePay(ctx context.Context, employeeID, baseSalary int64, startDate, endDate time.Time) (int, int64, error) {
 	// Get all overtime records for the employee in the period
 	overtimes, err := u.overtimeRepo.FindByTemplate(ctx, &entity.Overtime{
 		EmployeeID: employeeID,
@@ -248,7 +213,7 @@ func (u *RunPayrollUsecaseImpl) calculateOvertimePay(ctx context.Context, employ
 	return totalHours, totalPay, nil
 }
 
-func (u *RunPayrollUsecaseImpl) calculateReimbursementTotal(ctx context.Context, employeeID int64, startDate, endDate time.Time) (int64, error) {
+func (u *UsecaseImpl) calculateReimbursementTotal(ctx context.Context, employeeID int64, startDate, endDate time.Time) (int64, error) {
 	// Get all reimbursement records for the employee in the period
 	reimbursements, err := u.reimbursementRepo.FindByTemplate(ctx, &entity.Reimbursement{
 		EmployeeID: employeeID,

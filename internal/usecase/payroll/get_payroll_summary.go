@@ -6,39 +6,10 @@ import (
 	"time"
 
 	"github.com/asyauqi15/payslip-system/internal/entity"
-	"github.com/asyauqi15/payslip-system/internal/repository"
 	httppkg "github.com/asyauqi15/payslip-system/pkg/http"
 	v1 "github.com/asyauqi15/payslip-system/pkg/openapi/v1"
 	openapi_types "github.com/oapi-codegen/runtime/types"
 )
-
-type GetPayrollSummaryUsecase interface {
-	GetPayrollSummary(ctx context.Context, payrollID int64) (*v1.AdminPayrollSummaryResponse, error)
-}
-
-type GetPayrollSummaryUsecaseImpl struct {
-	payrollRepo          repository.PayrollRepository
-	payslipRepo          repository.PayslipRepository
-	employeeRepo         repository.EmployeeRepository
-	userRepo             repository.UserRepository
-	attendancePeriodRepo repository.AttendancePeriodRepository
-}
-
-func NewGetPayrollSummaryUsecase(
-	payrollRepo repository.PayrollRepository,
-	payslipRepo repository.PayslipRepository,
-	employeeRepo repository.EmployeeRepository,
-	userRepo repository.UserRepository,
-	attendancePeriodRepo repository.AttendancePeriodRepository,
-) GetPayrollSummaryUsecase {
-	return &GetPayrollSummaryUsecaseImpl{
-		payrollRepo:          payrollRepo,
-		payslipRepo:          payslipRepo,
-		employeeRepo:         employeeRepo,
-		userRepo:             userRepo,
-		attendancePeriodRepo: attendancePeriodRepo,
-	}
-}
 
 // Helper functions to convert values to pointers
 func intPtr(i int) *int {
@@ -54,7 +25,7 @@ func datePtr(t time.Time) *openapi_types.Date {
 	return &date
 }
 
-func (u *GetPayrollSummaryUsecaseImpl) GetPayrollSummary(ctx context.Context, payrollID int64) (*v1.AdminPayrollSummaryResponse, error) {
+func (u *UsecaseImpl) GetPayrollSummary(ctx context.Context, payrollID int64) (*v1.AdminPayrollSummaryResponse, error) {
 	// Get payroll record
 	payroll, err := u.payrollRepo.FindByID(ctx, uint(payrollID), nil)
 	if err != nil {

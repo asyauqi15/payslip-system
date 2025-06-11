@@ -5,27 +5,12 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/asyauqi15/payslip-system/internal/usecase/payslip"
 	v1 "github.com/asyauqi15/payslip-system/pkg/openapi/v1"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
 )
 
-type PayslipHandler interface {
-	GetPayslip(w http.ResponseWriter, r *http.Request)
-}
-
-type PayslipHandlerImpl struct {
-	getPayslipUsecase payslip.GetPayslipUsecase
-}
-
-func NewPayslipHandler(getPayslipUsecase payslip.GetPayslipUsecase) PayslipHandler {
-	return &PayslipHandlerImpl{
-		getPayslipUsecase: getPayslipUsecase,
-	}
-}
-
-func (h *PayslipHandlerImpl) GetPayslip(w http.ResponseWriter, r *http.Request) {
+func (h *HandlerImpl) GetPayslip(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	// Get payroll ID from URL path
@@ -40,7 +25,7 @@ func (h *PayslipHandlerImpl) GetPayslip(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	payslipResponse, err := h.getPayslipUsecase.GetPayslip(ctx, payrollID)
+	payslipResponse, err := h.payslipUsecase.GetPayslip(ctx, payrollID)
 	if err != nil {
 		slog.ErrorContext(ctx, "failed to get payslip", "payroll_id", payrollID, "error", err)
 		resp := &v1.DefaultErrorResponse{}

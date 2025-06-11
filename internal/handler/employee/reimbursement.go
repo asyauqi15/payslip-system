@@ -5,26 +5,11 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/asyauqi15/payslip-system/internal/usecase/reimbursement"
 	v1 "github.com/asyauqi15/payslip-system/pkg/openapi/v1"
 	"github.com/go-chi/render"
 )
 
-type ReimbursementHandler interface {
-	SubmitReimbursement(w http.ResponseWriter, r *http.Request)
-}
-
-type ReimbursementHandlerImpl struct {
-	submitReimbursementUsecase reimbursement.SubmitReimbursementUsecase
-}
-
-func NewReimbursementHandler(submitReimbursementUsecase reimbursement.SubmitReimbursementUsecase) ReimbursementHandler {
-	return &ReimbursementHandlerImpl{
-		submitReimbursementUsecase: submitReimbursementUsecase,
-	}
-}
-
-func (h *ReimbursementHandlerImpl) SubmitReimbursement(w http.ResponseWriter, r *http.Request) {
+func (h *HandlerImpl) SubmitReimbursement(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	var req v1.PostEmployeeReimbursementJSONRequestBody
@@ -37,7 +22,7 @@ func (h *ReimbursementHandlerImpl) SubmitReimbursement(w http.ResponseWriter, r 
 		return
 	}
 
-	err := h.submitReimbursementUsecase.SubmitReimbursement(ctx, req)
+	err := h.reimbursementUsecase.SubmitReimbursement(ctx, req)
 	if err != nil {
 		slog.ErrorContext(ctx, "failed to submit reimbursement", "error", err)
 		resp := &v1.DefaultErrorResponse{}

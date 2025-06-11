@@ -6,25 +6,10 @@ import (
 	"time"
 
 	"github.com/asyauqi15/payslip-system/internal/entity"
-	"github.com/asyauqi15/payslip-system/internal/repository"
 	httppkg "github.com/asyauqi15/payslip-system/pkg/http"
 )
 
-type CreateAttendancePeriodUsecase interface {
-	CreateAttendancePeriod(ctx context.Context, startDate, endDate time.Time) (*entity.AttendancePeriod, error)
-}
-
-type CreateAttendancePeriodUsecaseImpl struct {
-	attendancePeriodRepo repository.AttendancePeriodRepository
-}
-
-func NewCreateAttendancePeriodUsecase(attendancePeriodRepo repository.AttendancePeriodRepository) CreateAttendancePeriodUsecase {
-	return &CreateAttendancePeriodUsecaseImpl{
-		attendancePeriodRepo: attendancePeriodRepo,
-	}
-}
-
-func (u *CreateAttendancePeriodUsecaseImpl) CreateAttendancePeriod(ctx context.Context, startDate, endDate time.Time) (*entity.AttendancePeriod, error) {
+func (u *UsecaseImpl) CreateAttendancePeriod(ctx context.Context, startDate, endDate time.Time) (*entity.AttendancePeriod, error) {
 	// Validate dates
 	if startDate.After(endDate) {
 		return nil, httppkg.NewBadRequestError("start date must be before end date")

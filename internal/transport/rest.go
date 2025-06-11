@@ -35,9 +35,9 @@ func NewRESTServer(
 		r.Use(jwt.Authenticator)
 		r.Use(middleware.RequireAdminRole)
 
-		r.Post("/attendance-periods", h.AttendancePeriod.CreateAttendancePeriod)
-		r.Post("/payrolls", h.Payroll.RunPayroll)
-		r.Get("/payrolls/{id}", h.Payroll.GetPayrollSummary)
+		r.Post("/attendance-periods", h.Admin.CreateAttendancePeriod)
+		r.Post("/payrolls", h.Admin.RunPayroll)
+		r.Get("/payrolls/{id}", h.Admin.GetPayrollSummary)
 	})
 
 	// Employee routes (require authentication)
@@ -45,10 +45,10 @@ func NewRESTServer(
 		r.Use(jwt.Authenticator)
 		r.Use(middleware.RequireEmployeeRole)
 
-		r.Post("/attendance", h.Attendance.SubmitAttendance)
-		r.Post("/overtime", h.Overtime.SubmitOvertime)
-		r.Post("/reimbursement", h.Reimbursement.SubmitReimbursement)
-		r.Get("/payroll/{id}", h.Payslip.GetPayslip)
+		r.Post("/attendance", h.Employee.SubmitAttendance)
+		r.Post("/overtime", h.Employee.SubmitOvertime)
+		r.Post("/reimbursement", h.Employee.SubmitReimbursement)
+		r.Get("/payroll/{id}", h.Employee.GetPayslip)
 	})
 
 	return &RESTServer{

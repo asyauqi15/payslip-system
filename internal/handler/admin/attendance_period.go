@@ -6,26 +6,11 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/asyauqi15/payslip-system/internal/usecase/attendance_period"
 	v1 "github.com/asyauqi15/payslip-system/pkg/openapi/v1"
 	"github.com/go-chi/render"
 )
 
-type AttendancePeriodHandler interface {
-	CreateAttendancePeriod(w http.ResponseWriter, r *http.Request)
-}
-
-type AttendancePeriodHandlerImpl struct {
-	createAttendancePeriodUsecase attendance_period.CreateAttendancePeriodUsecase
-}
-
-func NewAttendancePeriodHandler(createAttendancePeriodUsecase attendance_period.CreateAttendancePeriodUsecase) AttendancePeriodHandler {
-	return &AttendancePeriodHandlerImpl{
-		createAttendancePeriodUsecase: createAttendancePeriodUsecase,
-	}
-}
-
-func (h *AttendancePeriodHandlerImpl) CreateAttendancePeriod(w http.ResponseWriter, r *http.Request) {
+func (h *HandlerImpl) CreateAttendancePeriod(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	var req v1.AttendancePeriodRequest
@@ -41,7 +26,7 @@ func (h *AttendancePeriodHandlerImpl) CreateAttendancePeriod(w http.ResponseWrit
 	startDate := time.Time(req.StartDate.Time)
 	endDate := time.Time(req.EndDate.Time)
 
-	_, err := h.createAttendancePeriodUsecase.CreateAttendancePeriod(ctx, startDate, endDate)
+	_, err := h.attendancePeriodUsecase.CreateAttendancePeriod(ctx, startDate, endDate)
 	if err != nil {
 		slog.ErrorContext(ctx, "failed to create attendance period", "error", err)
 		resp := &v1.DefaultErrorResponse{}

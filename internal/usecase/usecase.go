@@ -14,24 +14,22 @@ import (
 
 type Registry struct {
 	Auth                   authusecase.Usecase
-	CreateAttendancePeriod attendance_period.CreateAttendancePeriodUsecase
-	SubmitAttendance       attendance.SubmitAttendanceUsecase
-	SubmitOvertime         overtime.SubmitOvertimeUsecase
-	SubmitReimbursement    reimbursement.SubmitReimbursementUsecase
-	RunPayroll             payroll.RunPayrollUsecase
-	GetPayrollSummary      payroll.GetPayrollSummaryUsecase
-	GetPayslip             payslip.GetPayslipUsecase
+	CreateAttendancePeriod attendance_period.Usecase
+	SubmitAttendance       attendance.Usecase
+	SubmitOvertime         overtime.Usecase
+	SubmitReimbursement    reimbursement.Usecase
+	PayrollUsecase         payroll.Usecase
+	GetPayslip             payslip.Usecase
 }
 
 func InitializeUseCase(repository *repository.Registry, jwt *jwtauth.JWTAuthentication) *Registry {
 	return &Registry{
 		Auth:                   authusecase.NewUsecase(repository.UserRepository, jwt),
-		CreateAttendancePeriod: attendance_period.NewCreateAttendancePeriodUsecase(repository.AttendancePeriodRepository),
-		SubmitAttendance:       attendance.NewSubmitAttendanceUsecase(repository.AttendanceRepository, repository.EmployeeRepository),
-		SubmitOvertime:         overtime.NewSubmitOvertimeUsecase(repository.OvertimeRepository, repository.EmployeeRepository, repository.AttendanceRepository),
-		SubmitReimbursement:    reimbursement.NewSubmitReimbursementUsecase(repository.ReimbursementRepository, repository.EmployeeRepository),
-		RunPayroll:             payroll.NewRunPayrollUsecase(repository.PayrollRepository, repository.PayslipRepository, repository.EmployeeRepository, repository.AttendanceRepository, repository.AttendancePeriodRepository, repository.OvertimeRepository, repository.ReimbursementRepository),
-		GetPayrollSummary:      payroll.NewGetPayrollSummaryUsecase(repository.PayrollRepository, repository.PayslipRepository, repository.EmployeeRepository, repository.UserRepository, repository.AttendancePeriodRepository),
-		GetPayslip:             payslip.NewGetPayslipUsecase(repository.PayslipRepository, repository.PayrollRepository, repository.EmployeeRepository, repository.ReimbursementRepository, repository.AttendancePeriodRepository),
+		CreateAttendancePeriod: attendance_period.NewUsecase(repository.AttendancePeriodRepository),
+		SubmitAttendance:       attendance.NewUsecase(repository.AttendanceRepository, repository.EmployeeRepository),
+		SubmitOvertime:         overtime.NewUsecase(repository.OvertimeRepository, repository.EmployeeRepository, repository.AttendanceRepository),
+		SubmitReimbursement:    reimbursement.NewUsecase(repository.ReimbursementRepository, repository.EmployeeRepository),
+		PayrollUsecase:         payroll.NewUsecase(repository.PayrollRepository, repository.PayslipRepository, repository.EmployeeRepository, repository.AttendanceRepository, repository.AttendancePeriodRepository, repository.OvertimeRepository, repository.ReimbursementRepository, repository.UserRepository),
+		GetPayslip:             payslip.NewUsecase(repository.PayslipRepository, repository.PayrollRepository, repository.EmployeeRepository, repository.ReimbursementRepository, repository.AttendancePeriodRepository),
 	}
 }

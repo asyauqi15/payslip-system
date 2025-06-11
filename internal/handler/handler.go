@@ -8,23 +8,15 @@ import (
 )
 
 type Registry struct {
-	Auth             auth.Handler
-	AttendancePeriod admin.AttendancePeriodHandler
-	Payroll          admin.PayrollHandler
-	Attendance       employee.AttendanceHandler
-	Overtime         employee.OvertimeHandler
-	Reimbursement    employee.ReimbursementHandler
-	Payslip          employee.PayslipHandler
+	Auth     auth.Handler
+	Employee employee.Handler
+	Admin    admin.Handler
 }
 
 func InitializeHandler(usecase *usecase.Registry) *Registry {
 	return &Registry{
-		Auth:             auth.NewHandler(usecase.Auth),
-		AttendancePeriod: admin.NewAttendancePeriodHandler(usecase.CreateAttendancePeriod),
-		Payroll:          admin.NewPayrollHandler(usecase.RunPayroll, usecase.GetPayrollSummary),
-		Attendance:       employee.NewAttendanceHandler(usecase.SubmitAttendance),
-		Overtime:         employee.NewOvertimeHandler(usecase.SubmitOvertime),
-		Reimbursement:    employee.NewReimbursementHandler(usecase.SubmitReimbursement),
-		Payslip:          employee.NewPayslipHandler(usecase.GetPayslip),
+		Auth:     auth.NewHandler(usecase.Auth),
+		Employee: employee.NewHandler(usecase.SubmitAttendance, usecase.SubmitOvertime, usecase.GetPayslip, usecase.SubmitReimbursement),
+		Admin:    admin.NewHandler(usecase.CreateAttendancePeriod, usecase.PayrollUsecase),
 	}
 }

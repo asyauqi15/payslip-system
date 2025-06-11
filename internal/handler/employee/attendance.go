@@ -5,26 +5,11 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/asyauqi15/payslip-system/internal/usecase/attendance"
 	v1 "github.com/asyauqi15/payslip-system/pkg/openapi/v1"
 	"github.com/go-chi/render"
 )
 
-type AttendanceHandler interface {
-	SubmitAttendance(w http.ResponseWriter, r *http.Request)
-}
-
-type AttendanceHandlerImpl struct {
-	submitAttendanceUsecase attendance.SubmitAttendanceUsecase
-}
-
-func NewAttendanceHandler(submitAttendanceUsecase attendance.SubmitAttendanceUsecase) AttendanceHandler {
-	return &AttendanceHandlerImpl{
-		submitAttendanceUsecase: submitAttendanceUsecase,
-	}
-}
-
-func (h *AttendanceHandlerImpl) SubmitAttendance(w http.ResponseWriter, r *http.Request) {
+func (h *HandlerImpl) SubmitAttendance(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	var req v1.PostEmployeeAttendanceJSONBody
@@ -37,7 +22,7 @@ func (h *AttendanceHandlerImpl) SubmitAttendance(w http.ResponseWriter, r *http.
 		return
 	}
 
-	err := h.submitAttendanceUsecase.SubmitAttendance(ctx, req.AttendanceType)
+	err := h.attendanceUsecase.SubmitAttendance(ctx, req.AttendanceType)
 	if err != nil {
 		slog.ErrorContext(ctx, "failed to submit attendance", "error", err)
 		resp := &v1.DefaultErrorResponse{}
