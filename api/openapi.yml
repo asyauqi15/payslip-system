@@ -138,6 +138,8 @@ components:
       properties:
         payroll_id:
           type: integer
+        attendance_period:
+          $ref: "#/components/schemas/AttendancePeriod"
         employee_id:
           type: integer
         base_salary:
