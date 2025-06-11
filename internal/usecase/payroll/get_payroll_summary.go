@@ -2,10 +2,10 @@ package payroll
 
 import (
 	"context"
-	"log/slog"
 
 	"github.com/asyauqi15/payslip-system/internal/entity"
 	httppkg "github.com/asyauqi15/payslip-system/pkg/http"
+	"github.com/asyauqi15/payslip-system/pkg/logger"
 	v1 "github.com/asyauqi15/payslip-system/pkg/openapi/v1"
 	openapi_types "github.com/oapi-codegen/runtime/types"
 )
@@ -14,7 +14,7 @@ func (u *UsecaseImpl) GetPayrollSummary(ctx context.Context, payrollID int64) (*
 	// Get payroll record
 	payroll, err := u.payrollRepo.FindByID(ctx, uint(payrollID), nil)
 	if err != nil {
-		slog.ErrorContext(ctx, "failed to find payroll", "payroll_id", payrollID, "error", err)
+		logger.Error(ctx, "failed to find payroll", "payroll_id", payrollID, "error", err)
 		return nil, httppkg.NewInternalServerError("failed to find payroll")
 	}
 	if payroll == nil {
@@ -24,7 +24,7 @@ func (u *UsecaseImpl) GetPayrollSummary(ctx context.Context, payrollID int64) (*
 	// Get attendance period
 	attendancePeriod, err := u.attendancePeriodRepo.FindByID(ctx, uint(payroll.AttendancePeriodID), nil)
 	if err != nil {
-		slog.ErrorContext(ctx, "failed to find attendance period", "attendance_period_id", payroll.AttendancePeriodID, "error", err)
+		logger.Error(ctx, "failed to find attendance period", "attendance_period_id", payroll.AttendancePeriodID, "error", err)
 		return nil, httppkg.NewInternalServerError("failed to find attendance period")
 	}
 	if attendancePeriod == nil {
@@ -36,7 +36,7 @@ func (u *UsecaseImpl) GetPayrollSummary(ctx context.Context, payrollID int64) (*
 		PayrollID: payrollID,
 	}, nil)
 	if err != nil {
-		slog.ErrorContext(ctx, "failed to find payslips", "payroll_id", payrollID, "error", err)
+		logger.Error(ctx, "failed to find payslips", "payroll_id", payrollID, "error", err)
 		return nil, httppkg.NewInternalServerError("failed to find payslips")
 	}
 
@@ -46,22 +46,22 @@ func (u *UsecaseImpl) GetPayrollSummary(ctx context.Context, payrollID int64) (*
 		// Get employee
 		employee, err := u.employeeRepo.FindByID(ctx, uint(payslip.EmployeeID), nil)
 		if err != nil {
-			slog.ErrorContext(ctx, "failed to find employee", "employee_id", payslip.EmployeeID, "error", err)
+			logger.Error(ctx, "failed to find employee", "employee_id", payslip.EmployeeID, "error", err)
 			continue // Skip this payslip if employee not found
 		}
 		if employee == nil {
-			slog.WarnContext(ctx, "employee not found for payslip", "employee_id", payslip.EmployeeID)
+			logger.Warn(ctx, "employee not found for payslip", "employee_id", payslip.EmployeeID)
 			continue
 		}
 
 		// Get user for username
 		user, err := u.userRepo.FindByID(ctx, uint(employee.UserID), nil)
 		if err != nil {
-			slog.ErrorContext(ctx, "failed to find user", "user_id", employee.UserID, "error", err)
+			logger.Error(ctx, "failed to find user", "user_id", employee.UserID, "error", err)
 			continue
 		}
 		if user == nil {
-			slog.WarnContext(ctx, "user not found for employee", "user_id", employee.UserID)
+			logger.Warn(ctx, "user not found for employee", "user_id", employee.UserID)
 			continue
 		}
 

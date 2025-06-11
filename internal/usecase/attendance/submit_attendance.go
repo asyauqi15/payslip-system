@@ -2,12 +2,12 @@ package attendance
 
 import (
 	"context"
-	"log/slog"
 	"time"
 
 	"github.com/asyauqi15/payslip-system/internal/constant"
 	"github.com/asyauqi15/payslip-system/internal/entity"
 	httppkg "github.com/asyauqi15/payslip-system/pkg/http"
+	"github.com/asyauqi15/payslip-system/pkg/logger"
 	v1 "github.com/asyauqi15/payslip-system/pkg/openapi/v1"
 	"github.com/spf13/cast"
 )
@@ -24,7 +24,7 @@ func (u *UsecaseImpl) SubmitAttendance(ctx context.Context, attendanceType v1.Po
 	// Find the employee by user ID
 	employee, err := u.employeeRepo.FindOneByTemplate(ctx, &entity.Employee{UserID: userID}, nil)
 	if err != nil {
-		slog.ErrorContext(ctx, "failed to find employee", "user_id", userID, "error", err)
+		logger.Error(ctx, "failed to find employee", "user_id", userID, "error", err)
 		return httppkg.NewInternalServerError("failed to find employee")
 	}
 	if employee == nil {
@@ -54,7 +54,7 @@ func (u *UsecaseImpl) handleCheckIn(ctx context.Context, employeeID int64, curre
 	// Check if there's already a check-in for today
 	existingAttendances, err := u.attendanceRepo.FindByTemplate(ctx, &entity.Attendance{EmployeeID: employeeID}, nil)
 	if err != nil {
-		slog.ErrorContext(ctx, "failed to find existing attendances", "employee_id", employeeID, "error", err)
+		logger.Error(ctx, "failed to find existing attendances", "employee_id", employeeID, "error", err)
 		return httppkg.NewInternalServerError("failed to check existing attendance")
 	}
 
@@ -77,7 +77,7 @@ func (u *UsecaseImpl) handleCheckIn(ctx context.Context, employeeID int64, curre
 
 	_, err = u.attendanceRepo.Create(ctx, attendance, nil)
 	if err != nil {
-		slog.ErrorContext(ctx, "failed to create attendance record", "employee_id", employeeID, "error", err)
+		logger.Error(ctx, "failed to create attendance record", "employee_id", employeeID, "error", err)
 		return httppkg.NewInternalServerError("failed to create attendance record")
 	}
 
@@ -88,7 +88,7 @@ func (u *UsecaseImpl) handleCheckOut(ctx context.Context, employeeID int64, curr
 	// Find today's attendance record that has check-in but no check-out
 	existingAttendances, err := u.attendanceRepo.FindByTemplate(ctx, &entity.Attendance{EmployeeID: employeeID}, nil)
 	if err != nil {
-		slog.ErrorContext(ctx, "failed to find existing attendances", "employee_id", employeeID, "error", err)
+		logger.Error(ctx, "failed to find existing attendances", "employee_id", employeeID, "error", err)
 		return httppkg.NewInternalServerError("failed to check existing attendance")
 	}
 
@@ -115,7 +115,7 @@ func (u *UsecaseImpl) handleCheckOut(ctx context.Context, employeeID int64, curr
 	// Update the attendance record with check-out time
 	_, err = u.attendanceRepo.Updates(ctx, todayAttendance, entity.Attendance{ClockOutTime: currentTime}, nil)
 	if err != nil {
-		slog.ErrorContext(ctx, "failed to update attendance record", "attendance_id", todayAttendance.ID, "error", err)
+		logger.Error(ctx, "failed to update attendance record", "attendance_id", todayAttendance.ID, "error", err)
 		return httppkg.NewInternalServerError("failed to update attendance record")
 	}
 

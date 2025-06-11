@@ -1,10 +1,10 @@
 package employee
 
 import (
-	"log/slog"
 	"net/http"
 	"strconv"
 
+	"github.com/asyauqi15/payslip-system/pkg/logger"
 	v1 "github.com/asyauqi15/payslip-system/pkg/openapi/v1"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
@@ -17,7 +17,7 @@ func (h *HandlerImpl) GetPayslip(w http.ResponseWriter, r *http.Request) {
 	payrollIDStr := chi.URLParam(r, "id")
 	payrollID, err := strconv.ParseInt(payrollIDStr, 10, 64)
 	if err != nil {
-		slog.ErrorContext(ctx, "invalid payroll ID", "id", payrollIDStr, "error", err)
+		logger.Error(ctx, "invalid payroll ID", "id", payrollIDStr, "error", err)
 		resp := &v1.DefaultErrorResponse{}
 		resp.Error.Message = "invalid payroll ID"
 		render.Status(r, http.StatusBadRequest)
@@ -27,7 +27,7 @@ func (h *HandlerImpl) GetPayslip(w http.ResponseWriter, r *http.Request) {
 
 	payslipResponse, err := h.payslipUsecase.GetPayslip(ctx, payrollID)
 	if err != nil {
-		slog.ErrorContext(ctx, "failed to get payslip", "payroll_id", payrollID, "error", err)
+		logger.Error(ctx, "failed to get payslip", "payroll_id", payrollID, "error", err)
 		resp := &v1.DefaultErrorResponse{}
 		resp.Error.Message = err.Error()
 

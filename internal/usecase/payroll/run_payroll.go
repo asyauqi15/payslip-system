@@ -3,11 +3,11 @@ package payroll
 import (
 	"context"
 	"fmt"
-	"log/slog"
 	"time"
 
 	"github.com/asyauqi15/payslip-system/internal/entity"
 	httppkg "github.com/asyauqi15/payslip-system/pkg/http"
+	"github.com/asyauqi15/payslip-system/pkg/logger"
 	v1 "github.com/asyauqi15/payslip-system/pkg/openapi/v1"
 	"gorm.io/gorm"
 )
@@ -187,7 +187,7 @@ func (u *UsecaseImpl) calculateReimbursementTotal(ctx context.Context, employeeI
 func (u *UsecaseImpl) validateAndGetAttendancePeriod(ctx context.Context, attendancePeriodID int64) (*entity.AttendancePeriod, error) {
 	attendancePeriod, err := u.attendancePeriodRepo.FindByID(ctx, uint(attendancePeriodID), nil)
 	if err != nil {
-		slog.ErrorContext(ctx, "failed to find attendance period", "id", attendancePeriodID, "error", err)
+		logger.Error(ctx, "failed to find attendance period", "id", attendancePeriodID, "error", err)
 		return nil, httppkg.NewInternalServerError("failed to find attendance period")
 	}
 	if attendancePeriod == nil {
@@ -201,7 +201,7 @@ func (u *UsecaseImpl) validatePayrollNotExists(ctx context.Context, attendancePe
 		AttendancePeriodID: attendancePeriodID,
 	}, nil)
 	if err != nil && err != gorm.ErrRecordNotFound {
-		slog.ErrorContext(ctx, "failed to check existing payroll", "attendance_period_id", attendancePeriodID, "error", err)
+		logger.Error(ctx, "failed to check existing payroll", "attendance_period_id", attendancePeriodID, "error", err)
 		return httppkg.NewInternalServerError("failed to check existing payroll")
 	}
 	if existingPayroll != nil {
@@ -213,7 +213,7 @@ func (u *UsecaseImpl) validatePayrollNotExists(ctx context.Context, attendancePe
 func (u *UsecaseImpl) getEmployees(ctx context.Context) ([]entity.Employee, error) {
 	employees, err := u.employeeRepo.FindByTemplate(ctx, &entity.Employee{}, nil)
 	if err != nil {
-		slog.ErrorContext(ctx, "failed to get employees", "error", err)
+		logger.Error(ctx, "failed to get employees", "error", err)
 		return nil, httppkg.NewInternalServerError("failed to get employees")
 	}
 
@@ -235,7 +235,7 @@ func (u *UsecaseImpl) createPayrollRecord(ctx context.Context, attendancePeriodI
 
 	createdPayroll, err := u.payrollRepo.Create(ctx, payroll, nil)
 	if err != nil {
-		slog.ErrorContext(ctx, "failed to create payroll", "error", err)
+		logger.Error(ctx, "failed to create payroll", "error", err)
 		return nil, httppkg.NewInternalServerError("failed to create payroll")
 	}
 
@@ -248,7 +248,7 @@ func (u *UsecaseImpl) processAllEmployeePayslips(ctx context.Context, employees 
 	for _, employee := range employees {
 		payslip, err := u.processEmployeePayslip(ctx, employee, payrollID, attendancePeriod, totalWorkingDays)
 		if err != nil {
-			slog.ErrorContext(ctx, "failed to process employee payslip", "employee_id", employee.ID, "error", err)
+			logger.Error(ctx, "failed to process employee payslip", "employee_id", employee.ID, "error", err)
 			return nil, fmt.Errorf("failed to process employee %d payslip: %w", employee.ID, err)
 		}
 
@@ -269,7 +269,7 @@ func (u *UsecaseImpl) updatePayrollTotals(ctx context.Context, payroll *entity.P
 
 	_, err := u.payrollRepo.Updates(ctx, payroll, updatedPayroll, nil)
 	if err != nil {
-		slog.ErrorContext(ctx, "failed to update payroll totals", "payroll_id", payroll.ID, "error", err)
+		logger.Error(ctx, "failed to update payroll totals", "payroll_id", payroll.ID, "error", err)
 		return httppkg.NewInternalServerError("failed to update payroll totals")
 	}
 
@@ -277,7 +277,7 @@ func (u *UsecaseImpl) updatePayrollTotals(ctx context.Context, payroll *entity.P
 }
 
 func (u *UsecaseImpl) logPayrollSuccess(ctx context.Context, payrollID int64, attendancePeriodID int64, employeeCount int, totalPayout int64) {
-	slog.InfoContext(ctx, "payroll generated successfully",
+	logger.Info(ctx, "payroll generated successfully",
 		"payroll_id", payrollID,
 		"attendance_period_id", attendancePeriodID,
 		"total_employees", employeeCount,

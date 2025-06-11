@@ -2,12 +2,12 @@ package overtime
 
 import (
 	"context"
-	"log/slog"
 	"time"
 
 	"github.com/asyauqi15/payslip-system/internal/constant"
 	"github.com/asyauqi15/payslip-system/internal/entity"
 	httppkg "github.com/asyauqi15/payslip-system/pkg/http"
+	"github.com/asyauqi15/payslip-system/pkg/logger"
 	v1 "github.com/asyauqi15/payslip-system/pkg/openapi/v1"
 	"github.com/spf13/cast"
 )
@@ -24,7 +24,7 @@ func (u *UsecaseImpl) SubmitOvertime(ctx context.Context, req v1.OvertimeRequest
 	// Find the employee by user ID
 	employee, err := u.employeeRepo.FindOneByTemplate(ctx, &entity.Employee{UserID: userID}, nil)
 	if err != nil {
-		slog.ErrorContext(ctx, "failed to find employee", "user_id", userID, "error", err)
+		logger.Error(ctx, "failed to find employee", "user_id", userID, "error", err)
 		return httppkg.NewInternalServerError("failed to find employee")
 	}
 	if employee == nil {
@@ -70,11 +70,11 @@ func (u *UsecaseImpl) SubmitOvertime(ctx context.Context, req v1.OvertimeRequest
 
 	_, err = u.overtimeRepo.Create(ctx, overtime, nil)
 	if err != nil {
-		slog.ErrorContext(ctx, "failed to create overtime", "employee_id", employee.ID, "error", err)
+		logger.Error(ctx, "failed to create overtime", "employee_id", employee.ID, "error", err)
 		return httppkg.NewInternalServerError("failed to submit overtime")
 	}
 
-	slog.InfoContext(ctx, "overtime submitted successfully",
+	logger.Info(ctx, "overtime submitted successfully",
 		"employee_id", employee.ID,
 		"start_time", req.StartTime,
 		"end_time", req.EndTime,
@@ -97,7 +97,7 @@ func (u *UsecaseImpl) validateOvertimeConflicts(ctx context.Context, employeeID 
 	// Get all existing overtimes for the employee
 	existingOvertimes, err := u.overtimeRepo.FindByTemplate(ctx, &entity.Overtime{EmployeeID: employeeID}, nil)
 	if err != nil {
-		slog.ErrorContext(ctx, "failed to find existing overtimes", "employee_id", employeeID, "error", err)
+		logger.Error(ctx, "failed to find existing overtimes", "employee_id", employeeID, "error", err)
 		return httppkg.NewInternalServerError("failed to validate overtime period")
 	}
 

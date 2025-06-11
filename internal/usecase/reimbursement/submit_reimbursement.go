@@ -2,12 +2,12 @@ package reimbursement
 
 import (
 	"context"
-	"log/slog"
 	"time"
 
 	"github.com/asyauqi15/payslip-system/internal/constant"
 	"github.com/asyauqi15/payslip-system/internal/entity"
 	httppkg "github.com/asyauqi15/payslip-system/pkg/http"
+	"github.com/asyauqi15/payslip-system/pkg/logger"
 	v1 "github.com/asyauqi15/payslip-system/pkg/openapi/v1"
 	"github.com/spf13/cast"
 )
@@ -24,7 +24,7 @@ func (u *UsecaseImpl) SubmitReimbursement(ctx context.Context, req v1.Reimbursem
 	// Find the employee by user ID
 	employee, err := u.employeeRepo.FindOneByTemplate(ctx, &entity.Employee{UserID: userID}, nil)
 	if err != nil {
-		slog.ErrorContext(ctx, "failed to find employee", "user_id", userID, "error", err)
+		logger.Error(ctx, "failed to find employee", "user_id", userID, "error", err)
 		return httppkg.NewInternalServerError("failed to find employee")
 	}
 	if employee == nil {
@@ -52,11 +52,11 @@ func (u *UsecaseImpl) SubmitReimbursement(ctx context.Context, req v1.Reimbursem
 
 	_, err = u.reimbursementRepo.Create(ctx, reimbursement, nil)
 	if err != nil {
-		slog.ErrorContext(ctx, "failed to create reimbursement", "employee_id", employee.ID, "error", err)
+		logger.Error(ctx, "failed to create reimbursement", "employee_id", employee.ID, "error", err)
 		return httppkg.NewInternalServerError("failed to submit reimbursement")
 	}
 
-	slog.InfoContext(ctx, "reimbursement submitted successfully",
+	logger.Info(ctx, "reimbursement submitted successfully",
 		"employee_id", employee.ID,
 		"amount", req.Amount,
 		"date", reimbursementDate.Format("2006-01-02"),

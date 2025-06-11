@@ -3,13 +3,13 @@ package jwt_auth
 import (
 	"context"
 	"fmt"
-	"log/slog"
 	"net/http"
 	"time"
 
 	"github.com/asyauqi15/payslip-system/internal"
 	"github.com/asyauqi15/payslip-system/internal/constant"
 	"github.com/asyauqi15/payslip-system/internal/entity"
+	"github.com/asyauqi15/payslip-system/pkg/logger"
 	v1 "github.com/asyauqi15/payslip-system/pkg/openapi/v1"
 	"github.com/go-chi/jwtauth"
 	"github.com/go-chi/render"
@@ -108,13 +108,13 @@ func (ja *JWTAuthentication) ParseRefreshToken(ctx context.Context, token string
 func parseToken(ctx context.Context, jwt *jwtauth.JWTAuth, token string) (TokenClaims, error) {
 	refreshToken, err := jwtauth.VerifyToken(jwt, token)
 	if err != nil {
-		slog.ErrorContext(ctx, "error when verify token", "error", err)
+		logger.Error(ctx, "error when verify token", "error", err)
 		return TokenClaims{}, err
 	}
 
 	claims, err := refreshToken.AsMap(ctx)
 	if err != nil {
-		slog.ErrorContext(ctx, "error when get token claims", "error", err)
+		logger.Error(ctx, "error when get token claims", "error", err)
 		return TokenClaims{}, err
 	}
 
@@ -136,7 +136,7 @@ func generateToken(ctx context.Context, jwt *jwtauth.JWTAuth, user *entity.User,
 
 	_, tokenString, err := jwt.Encode(claims)
 	if err != nil {
-		slog.ErrorContext(ctx, "error when encode token claims", "error", err)
+		logger.Error(ctx, "error when encode token claims", "error", err)
 		return "", err
 	}
 	return tokenString, nil

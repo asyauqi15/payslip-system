@@ -2,12 +2,12 @@ package payslip
 
 import (
 	"context"
-	"log/slog"
 	"time"
 
 	"github.com/asyauqi15/payslip-system/internal/constant"
 	"github.com/asyauqi15/payslip-system/internal/entity"
 	httppkg "github.com/asyauqi15/payslip-system/pkg/http"
+	"github.com/asyauqi15/payslip-system/pkg/logger"
 	v1 "github.com/asyauqi15/payslip-system/pkg/openapi/v1"
 	openapi_types "github.com/oapi-codegen/runtime/types"
 	"github.com/spf13/cast"
@@ -25,7 +25,7 @@ func (u *UsecaseImpl) GetPayslip(ctx context.Context, payrollID int64) (*v1.Pays
 		UserID: cast.ToInt64(userID),
 	}, nil)
 	if err != nil {
-		slog.ErrorContext(ctx, "failed to find employee", "user_id", userID, "error", err)
+		logger.Error(ctx, "failed to find employee", "user_id", userID, "error", err)
 		return nil, httppkg.NewInternalServerError("failed to find employee")
 	}
 	if employee == nil {
@@ -35,7 +35,7 @@ func (u *UsecaseImpl) GetPayslip(ctx context.Context, payrollID int64) (*v1.Pays
 	// Get payroll record
 	payroll, err := u.payrollRepo.FindByID(ctx, uint(payrollID), nil)
 	if err != nil {
-		slog.ErrorContext(ctx, "failed to find payroll", "payroll_id", payrollID, "error", err)
+		logger.Error(ctx, "failed to find payroll", "payroll_id", payrollID, "error", err)
 		return nil, httppkg.NewInternalServerError("failed to find payroll")
 	}
 	if payroll == nil {
@@ -45,7 +45,7 @@ func (u *UsecaseImpl) GetPayslip(ctx context.Context, payrollID int64) (*v1.Pays
 	// Get attendance period
 	attendancePeriod, err := u.attendancePeriodRepo.FindByID(ctx, uint(payroll.AttendancePeriodID), nil)
 	if err != nil {
-		slog.ErrorContext(ctx, "failed to find attendance period", "attendance_period_id", payroll.AttendancePeriodID, "error", err)
+		logger.Error(ctx, "failed to find attendance period", "attendance_period_id", payroll.AttendancePeriodID, "error", err)
 		return nil, httppkg.NewInternalServerError("failed to find attendance period")
 	}
 	if attendancePeriod == nil {
@@ -58,7 +58,7 @@ func (u *UsecaseImpl) GetPayslip(ctx context.Context, payrollID int64) (*v1.Pays
 		PayrollID:  payrollID,
 	}, nil)
 	if err != nil {
-		slog.ErrorContext(ctx, "failed to find payslip", "employee_id", employee.ID, "payroll_id", payrollID, "error", err)
+		logger.Error(ctx, "failed to find payslip", "employee_id", employee.ID, "payroll_id", payrollID, "error", err)
 		return nil, httppkg.NewInternalServerError("failed to find payslip")
 	}
 	if payslip == nil {
@@ -70,7 +70,7 @@ func (u *UsecaseImpl) GetPayslip(ctx context.Context, payrollID int64) (*v1.Pays
 		EmployeeID: employee.ID,
 	}, nil)
 	if err != nil {
-		slog.ErrorContext(ctx, "failed to find reimbursements", "employee_id", employee.ID, "error", err)
+		logger.Error(ctx, "failed to find reimbursements", "employee_id", employee.ID, "error", err)
 		return nil, httppkg.NewInternalServerError("failed to find reimbursements")
 	}
 

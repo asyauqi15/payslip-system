@@ -2,10 +2,10 @@ package admin
 
 import (
 	"encoding/json"
-	"log/slog"
 	"net/http"
 	"time"
 
+	"github.com/asyauqi15/payslip-system/pkg/logger"
 	v1 "github.com/asyauqi15/payslip-system/pkg/openapi/v1"
 	"github.com/go-chi/render"
 )
@@ -15,7 +15,7 @@ func (h *HandlerImpl) CreateAttendancePeriod(w http.ResponseWriter, r *http.Requ
 
 	var req v1.AttendancePeriodRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		slog.ErrorContext(ctx, "failed to decode request body", "error", err)
+		logger.Error(ctx, "failed to decode request body", "error", err)
 		resp := &v1.DefaultErrorResponse{}
 		resp.Error.Message = "invalid request payload"
 		render.Status(r, http.StatusBadRequest)
@@ -28,7 +28,7 @@ func (h *HandlerImpl) CreateAttendancePeriod(w http.ResponseWriter, r *http.Requ
 
 	_, err := h.attendancePeriodUsecase.CreateAttendancePeriod(ctx, startDate, endDate)
 	if err != nil {
-		slog.ErrorContext(ctx, "failed to create attendance period", "error", err)
+		logger.Error(ctx, "failed to create attendance period", "error", err)
 		resp := &v1.DefaultErrorResponse{}
 		resp.Error.Message = err.Error()
 

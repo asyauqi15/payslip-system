@@ -2,9 +2,9 @@ package employee
 
 import (
 	"encoding/json"
-	"log/slog"
 	"net/http"
 
+	"github.com/asyauqi15/payslip-system/pkg/logger"
 	v1 "github.com/asyauqi15/payslip-system/pkg/openapi/v1"
 	"github.com/go-chi/render"
 )
@@ -14,7 +14,7 @@ func (h *HandlerImpl) SubmitReimbursement(w http.ResponseWriter, r *http.Request
 
 	var req v1.PostEmployeeReimbursementJSONRequestBody
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		slog.ErrorContext(ctx, "failed to decode request body", "error", err)
+		logger.Error(ctx, "failed to decode request body", "error", err)
 		resp := &v1.DefaultErrorResponse{}
 		resp.Error.Message = "invalid request payload"
 		render.Status(r, http.StatusBadRequest)
@@ -24,7 +24,7 @@ func (h *HandlerImpl) SubmitReimbursement(w http.ResponseWriter, r *http.Request
 
 	err := h.reimbursementUsecase.SubmitReimbursement(ctx, req)
 	if err != nil {
-		slog.ErrorContext(ctx, "failed to submit reimbursement", "error", err)
+		logger.Error(ctx, "failed to submit reimbursement", "error", err)
 		resp := &v1.DefaultErrorResponse{}
 		resp.Error.Message = err.Error()
 
