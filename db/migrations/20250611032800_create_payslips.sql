@@ -5,6 +5,8 @@ CREATE TABLE payslips (
     employee_id BIGINT NOT NULL,
     payroll_id BIGINT NOT NULL,
     base_salary BIGINT NOT NULL,
+    attendance_count INT NOT NULL DEFAULT 0,
+    total_working_days INT NOT NULL,
     prorated_salary BIGINT NOT NULL,
     overtime_pay BIGINT NOT NULL,
     reimbursement_total BIGINT NOT NULL,
