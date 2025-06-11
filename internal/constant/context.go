@@ -5,4 +5,5 @@ const (
 	ContextKeyUsername  = "username"
 	ContextKeyUserRole  = "user_role"
 	ContextKeyIPAddress = "ip_address"
+	ContextKeyRequestID = "request_id"
 )

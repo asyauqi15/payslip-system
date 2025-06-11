@@ -22,6 +22,8 @@ func NewRESTServer(
 	jwt *jwtauth.JWTAuthentication,
 ) (*RESTServer, error) {
 	routes := chi.NewRouter()
+	routes.Use(middleware.RequestID)
+	routes.Use(middleware.HTTPLogger)
 	routes.Use(middleware.Recoverer)
 	routes.Use(middleware.CheckIPAddress)
 
