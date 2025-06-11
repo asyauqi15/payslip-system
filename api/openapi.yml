@@ -70,30 +70,97 @@ components:
         description:
           type: string
 
+    AttendancePeriod:
+      type: object
+      properties:
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+
+    ReimbursementItem:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        amount:
+          type: integer
+        description:
+          type: string
+
+    PayslipItem:
+      type: object
+      properties:
+        employee_id:
+          type: integer
+        username:
+          type: string
+        base_salary:
+          type: integer
+        attendance_count:
+          type: integer
+        overtime_count:
+          type: integer
+        prorated_salary:
+          type: integer
+        overtime_payment:
+          type: integer
+        reimbursements_payment:
+          type: integer
+        total_pay:
+          type: integer
+
+    AdminPayrollSummaryResponse:
+      type: object
+      properties:
+        payroll_id:
+          type: integer
+        attendance_period:
+          $ref: "#/components/schemas/AttendancePeriod"
+        employees_count:
+          type: integer
+        total_payroll:
+          type: integer
+        total_reimbursements_pay:
+          type: integer
+        total_overtime_pay:
+          type: integer
+        payslip_list:
+          type: array
+          items:
+            $ref: "#/components/schemas/PayslipItem"
+
     PayslipResponse:
       type: object
       properties:
         payroll_id:
-          type: string
+          type: integer
+        employee_id:
+          type: integer
         base_salary:
           type: integer
+        attendance_count:
+          type: integer
+        total_working_days:
+          type: integer
         prorated_salary:
+          type: integer
+        overtime_total_hours:
           type: integer
         overtime_payment:
           type: integer
         reimbursements:
           type: array
           items:
-            type: object
-            properties:
-              date:
-                type: string
-              amount:
-                type: integer
-              description:
-                type: string
+            $ref: "#/components/schemas/ReimbursementItem"
+        reimbursements_total:
+          type: integer
         total_take_home:
           type: integer
+
     DefaultErrorResponse:
       type: object
       required:
@@ -180,23 +247,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  payroll_id:
-                    type: string
-                  total_payout:
-                    type: integer
-                  employees:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        employee_id:
-                          type: string
-                        username:
-                          type: string
-                        total_take_home:
-                          type: integer
+                $ref: "#/components/schemas/AdminPayrollSummaryResponse"
 
   /employee/attendance:
     post:
@@ -251,15 +302,15 @@ paths:
         201:
           description: Reimbursement submitted
 
-  /employee/payslip:
+  /employee/payroll/{id}:
     get:
       tags: [employee]
       summary: Get payslip for a given payroll
       security:
         - BearerAuth: []
       parameters:
-        - name: payroll_id
-          in: query
+        - name: id
+          in: path
           required: true
           schema:
             type: string
