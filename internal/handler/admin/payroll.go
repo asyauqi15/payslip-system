@@ -4,23 +4,31 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
+	"strconv"
 
 	"github.com/asyauqi15/payslip-system/internal/usecase/payroll"
 	v1 "github.com/asyauqi15/payslip-system/pkg/openapi/v1"
+	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
 )
 
 type PayrollHandler interface {
 	RunPayroll(w http.ResponseWriter, r *http.Request)
+	GetPayrollSummary(w http.ResponseWriter, r *http.Request)
 }
 
 type PayrollHandlerImpl struct {
-	runPayrollUsecase payroll.RunPayrollUsecase
+	runPayrollUsecase        payroll.RunPayrollUsecase
+	getPayrollSummaryUsecase payroll.GetPayrollSummaryUsecase
 }
 
-func NewPayrollHandler(runPayrollUsecase payroll.RunPayrollUsecase) PayrollHandler {
+func NewPayrollHandler(
+	runPayrollUsecase payroll.RunPayrollUsecase,
+	getPayrollSummaryUsecase payroll.GetPayrollSummaryUsecase,
+) PayrollHandler {
 	return &PayrollHandlerImpl{
-		runPayrollUsecase: runPayrollUsecase,
+		runPayrollUsecase:        runPayrollUsecase,
+		getPayrollSummaryUsecase: getPayrollSummaryUsecase,
 	}
 }
 
@@ -54,4 +62,39 @@ func (h *PayrollHandlerImpl) RunPayroll(w http.ResponseWriter, r *http.Request) 
 	}
 
 	w.WriteHeader(http.StatusCreated)
+}
+
+func (h *PayrollHandlerImpl) GetPayrollSummary(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	// Get payroll ID from URL path
+	payrollIDStr := chi.URLParam(r, "id")
+	payrollID, err := strconv.ParseInt(payrollIDStr, 10, 64)
+	if err != nil {
+		slog.ErrorContext(ctx, "invalid payroll ID", "id", payrollIDStr, "error", err)
+		resp := &v1.DefaultErrorResponse{}
+		resp.Error.Message = "invalid payroll ID"
+		render.Status(r, http.StatusBadRequest)
+		render.JSON(w, r, resp)
+		return
+	}
+
+	summary, err := h.getPayrollSummaryUsecase.GetPayrollSummary(ctx, payrollID)
+	if err != nil {
+		slog.ErrorContext(ctx, "failed to get payroll summary", "payroll_id", payrollID, "error", err)
+		resp := &v1.DefaultErrorResponse{}
+		resp.Error.Message = err.Error()
+
+		if httpErr, ok := err.(interface{ HTTPStatus() int }); ok {
+			render.Status(r, httpErr.HTTPStatus())
+		} else {
+			render.Status(r, http.StatusInternalServerError)
+		}
+
+		render.JSON(w, r, resp)
+		return
+	}
+
+	render.Status(r, http.StatusOK)
+	render.JSON(w, r, summary)
 }

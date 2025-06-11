@@ -37,6 +37,7 @@ func NewRESTServer(
 
 		r.Post("/attendance-periods", h.AttendancePeriod.CreateAttendancePeriod)
 		r.Post("/payrolls", h.Payroll.RunPayroll)
+		r.Get("/payrolls/{id}", h.Payroll.GetPayrollSummary)
 	})
 
 	// Employee routes (require authentication)

@@ -18,6 +18,7 @@ type Registry struct {
 	SubmitOvertime         overtime.SubmitOvertimeUsecase
 	SubmitReimbursement    reimbursement.SubmitReimbursementUsecase
 	RunPayroll             payroll.RunPayrollUsecase
+	GetPayrollSummary      payroll.GetPayrollSummaryUsecase
 }
 
 func InitializeUseCase(repository *repository.Registry, jwt *jwtauth.JWTAuthentication) *Registry {
@@ -28,5 +29,6 @@ func InitializeUseCase(repository *repository.Registry, jwt *jwtauth.JWTAuthenti
 		SubmitOvertime:         overtime.NewSubmitOvertimeUsecase(repository.OvertimeRepository, repository.EmployeeRepository, repository.AttendanceRepository),
 		SubmitReimbursement:    reimbursement.NewSubmitReimbursementUsecase(repository.ReimbursementRepository, repository.EmployeeRepository),
 		RunPayroll:             payroll.NewRunPayrollUsecase(repository.PayrollRepository, repository.PayslipRepository, repository.EmployeeRepository, repository.AttendanceRepository, repository.AttendancePeriodRepository, repository.OvertimeRepository, repository.ReimbursementRepository),
+		GetPayrollSummary:      payroll.NewGetPayrollSummaryUsecase(repository.PayrollRepository, repository.PayslipRepository, repository.EmployeeRepository, repository.UserRepository, repository.AttendancePeriodRepository),
 	}
 }

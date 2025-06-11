@@ -20,7 +20,7 @@ func InitializeHandler(usecase *usecase.Registry) *Registry {
 	return &Registry{
 		Auth:             auth.NewHandler(usecase.Auth),
 		AttendancePeriod: admin.NewAttendancePeriodHandler(usecase.CreateAttendancePeriod),
-		Payroll:          admin.NewPayrollHandler(usecase.RunPayroll),
+		Payroll:          admin.NewPayrollHandler(usecase.RunPayroll, usecase.GetPayrollSummary),
 		Attendance:       employee.NewAttendanceHandler(usecase.SubmitAttendance),
 		Overtime:         employee.NewOvertimeHandler(usecase.SubmitOvertime),
 		Reimbursement:    employee.NewReimbursementHandler(usecase.SubmitReimbursement),
