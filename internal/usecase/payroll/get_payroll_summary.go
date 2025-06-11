@@ -3,27 +3,12 @@ package payroll
 import (
 	"context"
 	"log/slog"
-	"time"
 
 	"github.com/asyauqi15/payslip-system/internal/entity"
 	httppkg "github.com/asyauqi15/payslip-system/pkg/http"
 	v1 "github.com/asyauqi15/payslip-system/pkg/openapi/v1"
 	openapi_types "github.com/oapi-codegen/runtime/types"
 )
-
-// Helper functions to convert values to pointers
-func intPtr(i int) *int {
-	return &i
-}
-
-func stringPtr(s string) *string {
-	return &s
-}
-
-func datePtr(t time.Time) *openapi_types.Date {
-	date := openapi_types.Date{Time: t}
-	return &date
-}
 
 func (u *UsecaseImpl) GetPayrollSummary(ctx context.Context, payrollID int64) (*v1.AdminPayrollSummaryResponse, error) {
 	// Get payroll record
@@ -81,15 +66,15 @@ func (u *UsecaseImpl) GetPayrollSummary(ctx context.Context, payrollID int64) (*
 		}
 
 		payslipItem := v1.PayslipItem{
-			EmployeeId:            intPtr(int(payslip.EmployeeID)),
-			Username:              stringPtr(user.Username),
-			BaseSalary:            intPtr(int(payslip.BaseSalary)),
-			AttendanceCount:       intPtr(payslip.AttendanceCount),
-			OvertimeCount:         intPtr(payslip.OvertimeTotalHours),
-			ProratedSalary:        intPtr(int(payslip.ProratedSalary)),
-			OvertimePayment:       intPtr(int(payslip.OvertimeTotalPay)),
-			ReimbursementsPayment: intPtr(int(payslip.ReimbursementTotal)),
-			TotalPay:              intPtr(int(payslip.TotalTakeHome)),
+			EmployeeId:            payslip.EmployeeID,
+			Username:              user.Username,
+			BaseSalary:            payslip.BaseSalary,
+			AttendanceCount:       payslip.AttendanceCount,
+			OvertimeCount:         payslip.OvertimeTotalHours,
+			ProratedSalary:        payslip.ProratedSalary,
+			OvertimePayment:       payslip.OvertimeTotalPay,
+			ReimbursementsPayment: payslip.ReimbursementTotal,
+			TotalPay:              payslip.TotalTakeHome,
 		}
 
 		payslipItems = append(payslipItems, payslipItem)
@@ -97,16 +82,16 @@ func (u *UsecaseImpl) GetPayrollSummary(ctx context.Context, payrollID int64) (*
 
 	// Build response
 	response := &v1.AdminPayrollSummaryResponse{
-		PayrollId: intPtr(int(payroll.ID)),
-		AttendancePeriod: &v1.AttendancePeriod{
-			StartDate: datePtr(attendancePeriod.StartDate),
-			EndDate:   datePtr(attendancePeriod.EndDate),
+		PayrollId: payroll.ID,
+		AttendancePeriod: v1.AttendancePeriod{
+			StartDate: openapi_types.Date{Time: attendancePeriod.StartDate},
+			EndDate:   openapi_types.Date{Time: attendancePeriod.EndDate},
 		},
-		EmployeesCount:         intPtr(int(payroll.TotalEmployees)),
-		TotalPayroll:           intPtr(int(payroll.TotalPayroll)),
-		TotalReimbursementsPay: intPtr(int(payroll.TotalReimbursement)),
-		TotalOvertimePay:       intPtr(int(payroll.TotalOvertime)),
-		PayslipList:            &payslipItems,
+		EmployeesCount:         payroll.TotalEmployees,
+		TotalPayroll:           payroll.TotalPayroll,
+		TotalReimbursementsPay: payroll.TotalReimbursement,
+		TotalOvertimePay:       payroll.TotalOvertime,
+		PayslipList:            payslipItems,
 	}
 
 	return response, nil

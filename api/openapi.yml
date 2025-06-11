@@ -72,6 +72,7 @@ components:
 
     AttendancePeriod:
       type: object
+      required: [start_date, end_date]
       properties:
         start_date:
           type: string
@@ -93,41 +94,54 @@ components:
 
     PayslipItem:
       type: object
+      required: [employee_id, username, base_salary, attendance_count, overtime_count, prorated_salary, overtime_payment, reimbursements_payment, total_pay]
       properties:
         employee_id:
           type: integer
+          format: int64
         username:
           type: string
         base_salary:
           type: integer
+          format: int64
         attendance_count:
           type: integer
         overtime_count:
           type: integer
         prorated_salary:
           type: integer
+          format: int64
         overtime_payment:
           type: integer
+          format: int64
         reimbursements_payment:
           type: integer
+          format: int64
         total_pay:
           type: integer
+          format: int64
 
     AdminPayrollSummaryResponse:
       type: object
+      required: [payroll_id, attendance_period, employees_count, total_payroll, total_reimbursements_pay, total_overtime_pay, payslip_list]
       properties:
         payroll_id:
           type: integer
+          format: int64
         attendance_period:
           $ref: "#/components/schemas/AttendancePeriod"
         employees_count:
           type: integer
+          format: int64
         total_payroll:
           type: integer
+          format: int64
         total_reimbursements_pay:
           type: integer
+          format: int64
         total_overtime_pay:
           type: integer
+          format: int64
         payslip_list:
           type: array
           items:
@@ -135,33 +149,41 @@ components:
 
     PayslipResponse:
       type: object
+      required: [payroll_id, attendance_period, employee_id, base_salary, attendance_count, total_working_days, prorated_salary, overtime_total_hours, overtime_payment, reimbursements, reimbursements_total, total_take_home]
       properties:
         payroll_id:
           type: integer
+          format: int64
         attendance_period:
           $ref: "#/components/schemas/AttendancePeriod"
         employee_id:
           type: integer
+          format: int64
         base_salary:
           type: integer
+          format: int64
         attendance_count:
           type: integer
         total_working_days:
           type: integer
         prorated_salary:
           type: integer
+          format: int64
         overtime_total_hours:
           type: integer
         overtime_payment:
           type: integer
+          format: int64
         reimbursements:
           type: array
           items:
             $ref: "#/components/schemas/ReimbursementItem"
         reimbursements_total:
           type: integer
+          format: int64
         total_take_home:
           type: integer
+          format: int64
 
     DefaultErrorResponse:
       type: object

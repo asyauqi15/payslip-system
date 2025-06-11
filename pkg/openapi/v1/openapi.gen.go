@@ -29,19 +29,19 @@ const (
 
 // AdminPayrollSummaryResponse defines model for AdminPayrollSummaryResponse.
 type AdminPayrollSummaryResponse struct {
-	AttendancePeriod       *AttendancePeriod `json:"attendance_period,omitempty"`
-	EmployeesCount         *int              `json:"employees_count,omitempty"`
-	PayrollId              *int              `json:"payroll_id,omitempty"`
-	PayslipList            *[]PayslipItem    `json:"payslip_list,omitempty"`
-	TotalOvertimePay       *int              `json:"total_overtime_pay,omitempty"`
-	TotalPayroll           *int              `json:"total_payroll,omitempty"`
-	TotalReimbursementsPay *int              `json:"total_reimbursements_pay,omitempty"`
+	AttendancePeriod       AttendancePeriod `json:"attendance_period"`
+	EmployeesCount         int64            `json:"employees_count"`
+	PayrollId              int64            `json:"payroll_id"`
+	PayslipList            []PayslipItem    `json:"payslip_list"`
+	TotalOvertimePay       int64            `json:"total_overtime_pay"`
+	TotalPayroll           int64            `json:"total_payroll"`
+	TotalReimbursementsPay int64            `json:"total_reimbursements_pay"`
 }
 
 // AttendancePeriod defines model for AttendancePeriod.
 type AttendancePeriod struct {
-	EndDate   *openapi_types.Date `json:"end_date,omitempty"`
-	StartDate *openapi_types.Date `json:"start_date,omitempty"`
+	EndDate   openapi_types.Date `json:"end_date"`
+	StartDate openapi_types.Date `json:"start_date"`
 }
 
 // AttendancePeriodRequest defines model for AttendancePeriodRequest.
@@ -78,31 +78,31 @@ type OvertimeRequest struct {
 
 // PayslipItem defines model for PayslipItem.
 type PayslipItem struct {
-	AttendanceCount       *int    `json:"attendance_count,omitempty"`
-	BaseSalary            *int    `json:"base_salary,omitempty"`
-	EmployeeId            *int    `json:"employee_id,omitempty"`
-	OvertimeCount         *int    `json:"overtime_count,omitempty"`
-	OvertimePayment       *int    `json:"overtime_payment,omitempty"`
-	ProratedSalary        *int    `json:"prorated_salary,omitempty"`
-	ReimbursementsPayment *int    `json:"reimbursements_payment,omitempty"`
-	TotalPay              *int    `json:"total_pay,omitempty"`
-	Username              *string `json:"username,omitempty"`
+	AttendanceCount       int    `json:"attendance_count"`
+	BaseSalary            int64  `json:"base_salary"`
+	EmployeeId            int64  `json:"employee_id"`
+	OvertimeCount         int    `json:"overtime_count"`
+	OvertimePayment       int64  `json:"overtime_payment"`
+	ProratedSalary        int64  `json:"prorated_salary"`
+	ReimbursementsPayment int64  `json:"reimbursements_payment"`
+	TotalPay              int64  `json:"total_pay"`
+	Username              string `json:"username"`
 }
 
 // PayslipResponse defines model for PayslipResponse.
 type PayslipResponse struct {
-	AttendanceCount     *int                 `json:"attendance_count,omitempty"`
-	AttendancePeriod    *AttendancePeriod    `json:"attendance_period,omitempty"`
-	BaseSalary          *int                 `json:"base_salary,omitempty"`
-	EmployeeId          *int                 `json:"employee_id,omitempty"`
-	OvertimePayment     *int                 `json:"overtime_payment,omitempty"`
-	OvertimeTotalHours  *int                 `json:"overtime_total_hours,omitempty"`
-	PayrollId           *int                 `json:"payroll_id,omitempty"`
-	ProratedSalary      *int                 `json:"prorated_salary,omitempty"`
-	Reimbursements      *[]ReimbursementItem `json:"reimbursements,omitempty"`
-	ReimbursementsTotal *int                 `json:"reimbursements_total,omitempty"`
-	TotalTakeHome       *int                 `json:"total_take_home,omitempty"`
-	TotalWorkingDays    *int                 `json:"total_working_days,omitempty"`
+	AttendanceCount     int                 `json:"attendance_count"`
+	AttendancePeriod    AttendancePeriod    `json:"attendance_period"`
+	BaseSalary          int64               `json:"base_salary"`
+	EmployeeId          int64               `json:"employee_id"`
+	OvertimePayment     int64               `json:"overtime_payment"`
+	OvertimeTotalHours  int                 `json:"overtime_total_hours"`
+	PayrollId           int64               `json:"payroll_id"`
+	ProratedSalary      int64               `json:"prorated_salary"`
+	Reimbursements      []ReimbursementItem `json:"reimbursements"`
+	ReimbursementsTotal int64               `json:"reimbursements_total"`
+	TotalTakeHome       int64               `json:"total_take_home"`
+	TotalWorkingDays    int                 `json:"total_working_days"`
 }
 
 // ReimbursementItem defines model for ReimbursementItem.
@@ -153,27 +153,28 @@ type PostEmployeeReimbursementJSONRequestBody = ReimbursementRequest
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/9RXTY/bNhD9KwTbo7J2mkvh26ZNgy0K1NgU6GFhCLQ0tpiVSGVI7cJY+L8X/JD1SVl2",
-	"dgP0ZovD4eO8mTfDF5rIopQChFZ09UJVkkHB7M/btOBizQ4o8/xLVRQMD/egSikUmOUSZQmoOVhjpjWI",
-	"lIkE4hKQy9R8/BlhR1f0p0VzxsIfsLg9bVg7+2NEoShzeQBQcSIroY0LfSiBrigXGvaAxqh0iGKeBtdV",
-	"zss458p64BoKdQ7N2m2601AYH94rQ2QH+19qlsfyydy3gLhkh/GznZ1HOGWCwItthQoKAyPksEEit18h",
-	"0Wb/IG4DKkCkccq0JWknsWCarqj9cHKnNHKxN+6UZqjnms/Bcw/fKnCR/4GwEL5VHCGlq4f23qg5dTOG",
-	"vdJZEG/JlHqW2M6yBl+lAAUrYGSxh+ZkGTUew1iC5ZUkoFSs5SOIUUAIOwSVBS16qDr++rvH4P0OO1bl",
-	"+hOixDBMMMvDzwUoxfYzglUbDhH0DN1BY0D/9kUa5DUFlSAvNZfjkTQZYxwMEu+d/RpM1kv2jGasNz2d",
-	"H3Wgjt21rVpTijyhplumIFYsZxiQtFqTg3p7UsWJU9rKaRQvoNwokWlIJ/EMlTPs8CTH48vTRRyK9qwe",
-	"OBGLV+mUr0jbZARPVi6UmaxQXdmWLyd3dve+b28L9fBe4tgLTaWNZo8QZ7KTHgOjZ4mPXOzjlB3U3A4+",
-	"RDvMpCKcP7N76LTQnUUWFNAfA66tj96JP/icLhpFhqRCrg9fTII41B+BIaDpsubf1v77o0b557//0MjN",
-	"vsaTW21gZ1qX9Ggcc7GTgyZCb9d3ZCeRqITlbJsD8TMo2YMAZMaKPHOdkab2I1KXVkSYSEknO83JXOfm",
-	"aC865HZ9RyP6BKjcke9vljdLW6ElCFZyuqIfbpY3H+yYoTN75QUzE/yiOfSdExw33kjHrWHWIrxLzXFS",
-	"aTv390VHUUcJKP1RprZ8Eym0Fw5WljlPrJvFV+UodcV5qbjVWXfs5oDGCuwHp732Br8s3w+p+A3BqEwn",
-	"C+jqocv/w+a4iahyb5rTphY7xCtzRDXbKzswmaDQjXHrw+oFb04w17Xp9TE889oKyG5/6hvbNlJAM0K/",
-	"HIbe37JO+ktJuK8E8TG1xcTInj+BuISKxQtPjwbYHkbo+AxdNu5SWyzICtBg2trDC+XmIqaAaETdaEB5",
-	"SvvhiFrE9JVrMx6q1ymWiRe5Za1LiDe5lpDPoIn/R+SOsDyvdU0RfuIqREyls0Uu91ycqY9KZ39ZszfS",
-	"l9YTb35iv+LRYXrstYmq7FPMUXOKvVtjitRzHDEVYePbirehzYW7NmuJ/XTcP/kNjf6+hTi54jBv/6ow",
-	"iJMMksfYXsL9lJVuCVDosdpzeJ1ijTSL5vJEVduC64tr5Ivd1u4cRrqSChGEJik7tOiqOepTVg8C8wir",
-	"37dvVC/95/O1oa39fGdgZXPbc2H0enS2B9SB9Dr6/+sC/XfoiLTUUyOCRg5P1yh/PcJ2WvFA8kNkdMfZ",
-	"WYl935uA3yK7Rx8416Z4x9l35vlg/B+Jr3WLT3WS9ptJwnLi1mlEK8z9u2W1WORmLZNKr35dLpf0uDn+",
-	"FwAA//9nENSr9hcAAA==",
+	"H4sIAAAAAAAC/9RY3Y7bNhN9FYLfd6msnaYoCt9t2jTYokCNTYFeLAyBlsYWsxKpDKkNjIXfveCPZP1Q",
+	"tuTsBu2dLXGGw3Nmzoz4TBNZlFKA0IqunqlKMiiY/XmbFlys2QFlnn+qioLh4R5UKYUC87pEWQJqDnYx",
+	"0xpEykQCcQnIZWoe/h9hR1f0f4vTHgu/weK2MVi79ceIQlHm8gCg4kRWQhsXO4kF03RFudA//Ugjqg8l",
+	"uL+wBzRWpQsx5ul0A5XzMs65sntwDYW6FO/aGd1pKIwP75UhsoP9LzXLY/lkECkgLtlhYjDO0J9hlg0C",
+	"L7YVKihMoJO3PEYU4UvFEVK6emijFwVYHJLSD/lMOEFYevhvmgjl9jMk2pxvkBuDdAORxinT0DmxfdC4",
+	"Uxq52Bt3SjPUU5f34GnZRqddpwR9D18qcAn274+90tlovCVT6qtEy8IgvkoBClZA4GUvmmZldPI4Hsuo",
+	"ziQJKBVr+QgiGBDCDkFloyt6UXX89a1D4f0KO1bl+gOixPEwwbwePi5AKbafAFa9cBhBb6HbKBTon77o",
+	"RnlNQSXIS81lGEmTMcbBIPHe2KejyTrHJpixfmmzf9QJNXTWtjifa01NWxlq6pYpiBXLGU5V7loYpzee",
+	"RgfPxNHWSqOkU3saSmQa0nlHGGr2jC2bNjBx/XSpaCMbtYWjTVI0JHaA8BCXAMCjMLSPeCbrJg1FZxh/",
+	"kdHpu6bvvDxpzByamaxQhZGYP8m9QNZPngDv22Zjc2AvleyRZ9WTZo8QZ7InoZesvkp85GIfp+wQxPba",
+	"oc+tuFh2gSDOll47EyZUJB3BdYhZqEyHvA0LtRgvz8mj2vl+erwU2Wif/j7BtdPDO/EbX2q/pvFDUiHX",
+	"h0+mVFzU74EhoBnmzL+t/fdbHeXvf/9FI/etaTy5t6ewM61LejSOudjJwaxCb9d3ZCeRqITlbJsD8V8U",
+	"ZA8CkJlV5CvXGTmlakTqLIsIEynp5JPZmevcbO01ndyu72hEnwCV2/LtzfJmadWsBMFKTlf03c3y5p2d",
+	"ZnVmj7xg5ot5cdr0jasnN0VLx61h1kZ4l5rtpNL2O7uv6S7nbUa8l6lVtkQK7VWXlWXOE+tm8Vk5Sp1M",
+	"ze0dddYduzmgsQL7wLU2e4Iflm+HVPyCYGq8kwV09dDl/2Fz3ERUuTuExqjFDmmER7O9snO5AYVujFsP",
+	"q9esKWCu66XXY3jhdsO3qAsyGzQLFNAE6JdD6P0p66SfS8J9JYjH1BYTI3v+BGIOFYtnnh5NYHsI0PER",
+	"umzcpbZYkBWgwYwAD8+Um4OYAqIRdbMhtR2nC0fUIqavXJswVC9TLGduwCxrXUL8kmsJ+Qia+H9E7gjL",
+	"81rXFOENV2PEVDpb5HLPxYX6qHT2h132SvrSukmYntgvuPU4PfbYRFX2i99R02Dv3jFF6sGHmIqw+Lbw",
+	"NrQ5uOtlLbE/j/sHb3DS39cQJ1cczxREVZiIkwySx9gewv2UVfvGbexOpOfwOsUKNIvT4YmqtgXXs2vk",
+	"kzVrdw4jXUmFCEKT1N05erpqjvqU1YPANMLqa5RXqpf+Lc210NZ+vhFYeTrtJRi9Hl3sATWQXkf/e12g",
+	"/5kfkJZ6akTQyOHpGuWvR9hOKx5I/hgZ3XF2UmLf9ybg18ju4AfOtSnecfaNeT4Y/wP4Wrf4VCdpv5kk",
+	"LCfuPY1ohbn/blktFrl5l0mlVz8vl0t63Bz/CQAA///6ma4GZhsAAA==",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

@@ -89,21 +89,21 @@ func (u *UsecaseImpl) GetPayslip(ctx context.Context, payrollID int64) (*v1.Pays
 
 	// Build response
 	response := &v1.PayslipResponse{
-		PayrollId: intPtr(int(payslip.PayrollID)),
-		AttendancePeriod: &v1.AttendancePeriod{
-			StartDate: datePtr(attendancePeriod.StartDate),
-			EndDate:   datePtr(attendancePeriod.EndDate),
+		PayrollId: payslip.PayrollID,
+		AttendancePeriod: v1.AttendancePeriod{
+			StartDate: openapi_types.Date{Time: attendancePeriod.StartDate},
+			EndDate:   openapi_types.Date{Time: attendancePeriod.EndDate},
 		},
-		EmployeeId:          intPtr(int(payslip.EmployeeID)),
-		BaseSalary:          intPtr(int(payslip.BaseSalary)),
-		AttendanceCount:     intPtr(payslip.AttendanceCount),
-		TotalWorkingDays:    intPtr(payslip.TotalWorkingDays),
-		ProratedSalary:      intPtr(int(payslip.ProratedSalary)),
-		OvertimeTotalHours:  intPtr(payslip.OvertimeTotalHours),
-		OvertimePayment:     intPtr(int(payslip.OvertimeTotalPay)),
-		Reimbursements:      &reimbursementItems,
-		ReimbursementsTotal: intPtr(int(payslip.ReimbursementTotal)),
-		TotalTakeHome:       intPtr(int(payslip.TotalTakeHome)),
+		EmployeeId:          payslip.EmployeeID,
+		BaseSalary:          payslip.BaseSalary,
+		AttendanceCount:     payslip.AttendanceCount,
+		TotalWorkingDays:    payslip.TotalWorkingDays,
+		ProratedSalary:      payslip.ProratedSalary,
+		OvertimeTotalHours:  payslip.OvertimeTotalHours,
+		OvertimePayment:     payslip.OvertimeTotalPay,
+		Reimbursements:      reimbursementItems,
+		ReimbursementsTotal: payslip.ReimbursementTotal,
+		TotalTakeHome:       payslip.TotalTakeHome,
 	}
 
 	return response, nil
