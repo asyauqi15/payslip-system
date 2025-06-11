@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"log"
+
 	"github.com/asyauqi15/payslip-system/internal"
 	"github.com/asyauqi15/payslip-system/internal/handler"
 	"github.com/asyauqi15/payslip-system/internal/repository"
@@ -8,11 +10,11 @@ import (
 	jwtauth "github.com/asyauqi15/payslip-system/pkg/jwt-auth"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
-	"log"
 )
 
 type registry struct {
 	handler *handler.Registry
+	jwt     *jwtauth.JWTAuthentication
 }
 
 func initRegistry(cfg internal.Config, jwt *jwtauth.JWTAuthentication) *registry {
@@ -29,5 +31,6 @@ func initRegistry(cfg internal.Config, jwt *jwtauth.JWTAuthentication) *registry
 
 	return &registry{
 		handler: h,
+		jwt:     jwt,
 	}
 }

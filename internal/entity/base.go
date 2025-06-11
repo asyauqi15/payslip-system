@@ -2,9 +2,13 @@ package entity
 
 import (
 	"context"
+	"encoding/json"
+	"reflect"
+
+	"time"
+
 	"github.com/asyauqi15/payslip-system/internal/constant"
 	"gorm.io/gorm"
-	"time"
 )
 
 type Base struct {
@@ -14,71 +18,135 @@ type Base struct {
 }
 
 func (b Base) BeforeUpdate(tx *gorm.DB) (err error) {
-	// Capture the state before the update
-	dataBefore := make(map[string]any)
-	if err := tx.Statement.Preload("").Find(dataBefore).Error; err != nil {
-		return err
+	// Get the current record from database before update
+	if tx.Statement.Schema != nil {
+		// Create a new instance of the same type
+		modelType := tx.Statement.Schema.ModelType
+		if modelType.Kind() == reflect.Ptr {
+			modelType = modelType.Elem()
+		}
+
+		currentRecord := reflect.New(modelType).Interface()
+
+		// Find the current record by ID
+		var recordID interface{}
+		if field := tx.Statement.Schema.LookUpField("ID"); field != nil {
+			recordID, _ = field.ValueOf(tx.Statement.Context, tx.Statement.ReflectValue)
+		}
+
+		if recordID != nil {
+			err := tx.Where("id = ?", recordID).First(currentRecord).Error
+			if err == nil {
+				// Convert to map for storage
+				dataBytes, _ := json.Marshal(currentRecord)
+				var dataMap map[string]interface{}
+				json.Unmarshal(dataBytes, &dataMap)
+
+				// Store in context
+				tx.Statement.Context = context.WithValue(tx.Statement.Context, "data_before", dataMap)
+			}
+		}
 	}
-	tx.Statement.Context = context.WithValue(tx.Statement.Context, "data_before", dataBefore)
 	return nil
 }
 
 func (b Base) AfterUpdate(tx *gorm.DB) (err error) {
-	// Capture the state after the update
-	dataAfter := make(map[string]any)
-	if err := tx.Statement.Preload("").Find(dataAfter).Error; err != nil {
-		return err
-	}
+	// Get the data before from context
+	dataBefore, _ := tx.Statement.Context.Value("data_before").(map[string]interface{})
 
-	// Retrieve the dataBefore from the context
-	dataBefore, _ := tx.Statement.Context.Value("data_before").(map[string]any)
+	// Get the current data after update
+	var dataAfter map[string]interface{}
+	if tx.Statement.Dest != nil {
+		dataBytes, _ := json.Marshal(tx.Statement.Dest)
+		json.Unmarshal(dataBytes, &dataAfter)
+	}
 
 	// Find differences and exclude UpdatedAt
-	differencesBefore := make(map[string]any)
-	differencesAfter := make(map[string]any)
-	for key, valueBefore := range dataBefore {
-		if key == "UpdatedAt" {
-			continue
-		}
-		if valueAfter, exists := dataAfter[key]; exists && valueBefore != valueAfter {
-			differencesBefore[key] = valueBefore
-			differencesAfter[key] = valueAfter
+	differencesBefore := make(map[string]interface{})
+	differencesAfter := make(map[string]interface{})
+
+	if dataBefore != nil && dataAfter != nil {
+		for key, valueBefore := range dataBefore {
+			if key == "UpdatedAt" || key == "updated_at" {
+				continue
+			}
+			if valueAfter, exists := dataAfter[key]; exists {
+				// Convert to comparable types
+				beforeStr, _ := json.Marshal(valueBefore)
+				afterStr, _ := json.Marshal(valueAfter)
+
+				if string(beforeStr) != string(afterStr) {
+					differencesBefore[key] = valueBefore
+					differencesAfter[key] = valueAfter
+				}
+			}
 		}
 	}
 
-	// Retrieve the primary key value
-	var recordID any
-	if field := tx.Statement.Schema.LookUpField("ID"); field != nil {
-		recordID, _ = field.ValueOf(tx.Statement.Context, tx.Statement.ReflectValue)
+	// Only create audit log if there are actual changes
+	if len(differencesBefore) > 0 {
+		// Get record ID
+		var recordID interface{}
+		if field := tx.Statement.Schema.LookUpField("ID"); field != nil {
+			recordID, _ = field.ValueOf(tx.Statement.Context, tx.Statement.ReflectValue)
+		}
+
+		// Get user context (with nil checks)
+		var userID string
+		var ipAddress string
+
+		if userIDVal := tx.Statement.Context.Value(constant.ContextKeyUserID); userIDVal != nil {
+			userID, _ = userIDVal.(string)
+		}
+		if ipVal := tx.Statement.Context.Value(constant.ContextKeyIPAddress); ipVal != nil {
+			ipAddress, _ = ipVal.(string)
+		}
+
+		// Create audit log entry
+		auditLog := AuditLog{
+			TableName:  tx.Statement.Table,
+			RecordID:   recordID.(int64),
+			Action:     AuditLogActionUpdate,
+			DataBefore: differencesBefore,
+			DataAfter:  differencesAfter,
+			UserID:     userID,
+			IPAddress:  ipAddress,
+		}
+
+		return tx.Create(&auditLog).Error
 	}
 
-	// Create an audit log entry
-	return tx.Create(AuditLog{
-		TableName:  tx.Statement.Table,
-		RecordID:   recordID.(int64),
-		Action:     AuditLogActionUpdate,
-		DataBefore: differencesBefore,
-		DataAfter:  differencesAfter,
-		UserID:     tx.Statement.Context.Value(constant.ContextKeyUserID).(string),
-		IPAddress:  tx.Statement.Context.Value(constant.ContextKeyIPAddress).(string),
-	}).Error
+	return nil
 }
 
 func (b Base) AfterCreate(tx *gorm.DB) (err error) {
-	// Retrieve the primary key value
-	var recordID any
+	// Get record ID
+	var recordID interface{}
 	if field := tx.Statement.Schema.LookUpField("ID"); field != nil {
 		recordID, _ = field.ValueOf(tx.Statement.Context, tx.Statement.ReflectValue)
 	}
 
-	// Create an audit log entry
-	return tx.Create(AuditLog{
+	// Get user context (with nil checks)
+	var userID string
+	var ipAddress string
+
+	if userIDVal := tx.Statement.Context.Value(constant.ContextKeyUserID); userIDVal != nil {
+		userID, _ = userIDVal.(string)
+	}
+	if ipVal := tx.Statement.Context.Value(constant.ContextKeyIPAddress); ipVal != nil {
+		ipAddress, _ = ipVal.(string)
+	}
+
+	// Create audit log entry
+	auditLog := AuditLog{
 		TableName:  tx.Statement.Table,
 		RecordID:   recordID.(int64),
 		Action:     AuditLogActionCreate,
 		DataBefore: nil,
 		DataAfter:  nil,
-		UserID:     tx.Statement.Context.Value(constant.ContextKeyUserID).(string),
-		IPAddress:  tx.Statement.Context.Value(constant.ContextKeyIPAddress).(string),
-	}).Error
+		UserID:     userID,
+		IPAddress:  ipAddress,
+	}
+
+	return tx.Create(&auditLog).Error
 }

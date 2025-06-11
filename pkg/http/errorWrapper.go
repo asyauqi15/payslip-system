@@ -49,3 +49,10 @@ func NewConflictError(errorMessage string) error {
 		Message:    errorMessage,
 	}
 }
+
+func NewUnprocessableEntityError(errorMessage string) error {
+	return &ErrorWrapper{
+		StatusCode: http.StatusUnprocessableEntity,
+		Message:    errorMessage,
+	}
+}

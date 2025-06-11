@@ -3,11 +3,13 @@ package transport
 import (
 	"context"
 	"fmt"
+	"net/http"
+
 	"github.com/asyauqi15/payslip-system/internal"
 	"github.com/asyauqi15/payslip-system/internal/handler"
 	"github.com/asyauqi15/payslip-system/internal/transport/middleware"
+	jwtauth "github.com/asyauqi15/payslip-system/pkg/jwt-auth"
 	"github.com/go-chi/chi/v5"
-	"net/http"
 )
 
 type RESTServer struct {
@@ -17,15 +19,24 @@ type RESTServer struct {
 func NewRESTServer(
 	config internal.Config,
 	h *handler.Registry,
+	jwt *jwtauth.JWTAuthentication,
 ) (*RESTServer, error) {
 	routes := chi.NewRouter()
 	routes.Use(middleware.Recoverer)
 	routes.Use(middleware.CheckIPAddress)
 
+	// Public routes
 	routes.Post("/auth/login", h.Auth.Login)
-
 	routes.Get("/ping", pingHandler)
 	swaggerRoutes(routes)
+
+	// Admin routes (require authentication and admin role)
+	routes.Route("/admin", func(r chi.Router) {
+		r.Use(jwt.Authenticator)
+		r.Use(middleware.RequireAdminRole)
+
+		r.Post("/attendance-periods", h.AttendancePeriod.CreateAttendancePeriod)
+	})
 
 	return &RESTServer{
 		srv: &http.Server{

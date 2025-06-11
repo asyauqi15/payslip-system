@@ -3,13 +3,14 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"github.com/asyauqi15/payslip-system/internal/transport"
-	jwtauth "github.com/asyauqi15/payslip-system/pkg/jwt-auth"
-	"github.com/spf13/cobra"
 	"log"
 	"os"
 	"os/signal"
 	"time"
+
+	"github.com/asyauqi15/payslip-system/internal/transport"
+	jwtauth "github.com/asyauqi15/payslip-system/pkg/jwt-auth"
+	"github.com/spf13/cobra"
 )
 
 const (
@@ -38,7 +39,7 @@ func runHTTPServer(_ *cobra.Command, _ []string) error {
 
 	r := initRegistry(cfg, jwtAuth)
 
-	server, err := transport.NewRESTServer(cfg, r.handler)
+	server, err := transport.NewRESTServer(cfg, r.handler, r.jwt)
 	if err != nil {
 		log.Fatalf("failed to initiate http server: %s", err)
 	}
