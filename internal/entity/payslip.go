@@ -8,7 +8,8 @@ type Payslip struct {
 	AttendanceCount    int   `gorm:"not null;default:0"`
 	TotalWorkingDays   int   `gorm:"not null"`
 	ProratedSalary     int64 `gorm:"not null"`
-	OvertimePay        int64 `gorm:"not null"`
+	OvertimeTotalHours int   `gorm:"not null;default:0"`
+	OvertimeTotalPay   int64 `gorm:"not null;default:0"`
 	ReimbursementTotal int64 `gorm:"not null"`
 	TotalTakeHome      int64 `gorm:"not null"`
 }

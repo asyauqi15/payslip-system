@@ -3,10 +3,9 @@
 CREATE TABLE payrolls (
     id BIGSERIAL PRIMARY KEY,
     attendance_period_id BIGINT NOT NULL UNIQUE,
-    total_employees BIGINT NOT NULL,
+    employees_count BIGINT NOT NULL,
     total_reimbursement BIGINT NOT NULL,
     total_overtime BIGINT NOT NULL,
-    total_take_home BIGINT NOT NULL,
     total_payroll BIGINT NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
