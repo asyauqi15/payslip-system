@@ -8,6 +8,7 @@ import (
 	"gorm.io/gorm"
 )
 
+//go:generate mockgen -destination=./mock/mock_attendance_repository.go -package=mock github.com/asyauqi15/payslip-system/internal/repository AttendanceRepository
 type AttendanceRepository interface {
 	BaseRepository[entity.Attendance]
 	CountAttendanceInPeriod(ctx context.Context, employeeID int64, startDate, endDate time.Time, tx *gorm.DB) (int64, error)

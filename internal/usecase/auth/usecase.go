@@ -6,6 +6,7 @@ import (
 	jwt_auth "github.com/asyauqi15/payslip-system/pkg/jwt-auth"
 )
 
+//go:generate mockgen -destination=./mock/mock_usecase.go -package=mock github.com/asyauqi15/payslip-system/internal/usecase/auth Usecase
 type Usecase interface {
 	Auth(ctx context.Context, email string, password string) (*Result, error)
 }

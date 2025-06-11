@@ -7,6 +7,7 @@ import (
 	v1 "github.com/asyauqi15/payslip-system/pkg/openapi/v1"
 )
 
+//go:generate mockgen -destination=./mock/mock_usecase.go -package=mock github.com/asyauqi15/payslip-system/internal/usecase/attendance Usecase
 type Usecase interface {
 	SubmitAttendance(ctx context.Context, attendanceType v1.PostEmployeeAttendanceJSONBodyAttendanceType) error
 }

@@ -7,6 +7,7 @@ import (
 	v1 "github.com/asyauqi15/payslip-system/pkg/openapi/v1"
 )
 
+//go:generate mockgen -destination=./mock/mock_usecase.go -package=mock github.com/asyauqi15/payslip-system/internal/usecase/payroll Usecase
 type Usecase interface {
 	RunPayroll(ctx context.Context, req v1.PostAdminPayrollsJSONRequestBody) error
 	GetPayrollSummary(ctx context.Context, payrollID int64) (*v1.AdminPayrollSummaryResponse, error)
