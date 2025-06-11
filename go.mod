@@ -18,6 +18,7 @@ require (
 )
 
 require (
+	github.com/DATA-DOG/go-sqlmock v1.5.2 // indirect
 	github.com/ajg/form v1.5.1 // indirect
 	github.com/deepmap/oapi-codegen v1.16.3 // indirect
 	github.com/fsnotify/fsnotify v1.8.0 // indirect
