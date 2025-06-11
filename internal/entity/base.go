@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/asyauqi15/payslip-system/internal/constant"
+	"github.com/spf13/cast"
 	"gorm.io/gorm"
 )
 
@@ -54,11 +55,33 @@ func (b Base) AfterUpdate(tx *gorm.DB) (err error) {
 	// Get the data before from context
 	dataBefore, _ := tx.Statement.Context.Value("data_before").(map[string]interface{})
 
-	// Get the current data after update
+	// Get the updated record from database
 	var dataAfter map[string]interface{}
-	if tx.Statement.Dest != nil {
-		dataBytes, _ := json.Marshal(tx.Statement.Dest)
-		json.Unmarshal(dataBytes, &dataAfter)
+	if tx.Statement.Schema != nil && dataBefore != nil {
+		// Create a new instance of the same type
+		modelType := tx.Statement.Schema.ModelType
+		if modelType.Kind() == reflect.Ptr {
+			modelType = modelType.Elem()
+		}
+
+		updatedRecord := reflect.New(modelType).Interface()
+
+		// Get record ID
+		var recordID interface{}
+		if field := tx.Statement.Schema.LookUpField("ID"); field != nil {
+			if idFromBefore, exists := dataBefore["ID"]; exists {
+				recordID = idFromBefore
+			}
+		}
+
+		if recordID != nil {
+			// Fetch the updated record from database
+			err := tx.Where("id = ?", recordID).First(updatedRecord).Error
+			if err == nil {
+				dataBytes, _ := json.Marshal(updatedRecord)
+				json.Unmarshal(dataBytes, &dataAfter)
+			}
+		}
 	}
 
 	// Find differences and exclude UpdatedAt
@@ -85,9 +108,11 @@ func (b Base) AfterUpdate(tx *gorm.DB) (err error) {
 
 	// Only create audit log if there are actual changes
 	if len(differencesBefore) > 0 {
-		// Get record ID
+		// Get record ID from dataBefore (more reliable)
 		var recordID interface{}
-		if field := tx.Statement.Schema.LookUpField("ID"); field != nil {
+		if idFromBefore, exists := dataBefore["ID"]; exists {
+			recordID = idFromBefore
+		} else if field := tx.Statement.Schema.LookUpField("ID"); field != nil {
 			recordID, _ = field.ValueOf(tx.Statement.Context, tx.Statement.ReflectValue)
 		}
 
@@ -105,7 +130,7 @@ func (b Base) AfterUpdate(tx *gorm.DB) (err error) {
 		// Create audit log entry
 		auditLog := AuditLog{
 			TableName:  tx.Statement.Table,
-			RecordID:   recordID.(int64),
+			RecordID:   cast.ToInt64(recordID),
 			Action:     AuditLogActionUpdate,
 			DataBefore: differencesBefore,
 			DataAfter:  differencesAfter,
@@ -140,7 +165,7 @@ func (b Base) AfterCreate(tx *gorm.DB) (err error) {
 	// Create audit log entry
 	auditLog := AuditLog{
 		TableName:  tx.Statement.Table,
-		RecordID:   recordID.(int64),
+		RecordID:   cast.ToInt64(recordID),
 		Action:     AuditLogActionCreate,
 		DataBefore: nil,
 		DataAfter:  nil,

@@ -164,15 +164,15 @@ paths:
         200:
           description: Payroll generated
 
-  /admin/payslips/summary:
+  /admin/payrolls/{id}:
     get:
       tags: [admin]
       summary: Get summary of all payslips in payroll
       security:
         - BearerAuth: []
       parameters:
-        - name: payroll_id
-          in: query
+        - name: id
+          in: path
           required: true
           schema:
             type: string

@@ -85,11 +85,6 @@ type PostAdminPayrollsJSONBody struct {
 	AttendancePeriodId openapi_types.UUID `json:"attendance_period_id"`
 }
 
-// GetAdminPayslipsSummaryParams defines parameters for GetAdminPayslipsSummary.
-type GetAdminPayslipsSummaryParams struct {
-	PayrollId string `form:"payroll_id" json:"payroll_id"`
-}
-
 // PostEmployeeAttendanceJSONBody defines parameters for PostEmployeeAttendance.
 type PostEmployeeAttendanceJSONBody struct {
 	AttendanceType PostEmployeeAttendanceJSONBodyAttendanceType `json:"attendance_type"`
@@ -124,25 +119,25 @@ type PostEmployeeReimbursementJSONRequestBody = ReimbursementRequest
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
+	"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",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

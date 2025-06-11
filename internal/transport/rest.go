@@ -38,6 +38,14 @@ func NewRESTServer(
 		r.Post("/attendance-periods", h.AttendancePeriod.CreateAttendancePeriod)
 	})
 
+	// Employee routes (require authentication)
+	routes.Route("/employee", func(r chi.Router) {
+		r.Use(jwt.Authenticator)
+		r.Use(middleware.RequireEmployeeRole)
+
+		r.Post("/attendance", h.Attendance.SubmitAttendance)
+	})
+
 	return &RESTServer{
 		srv: &http.Server{
 			Addr:              fmt.Sprintf("0.0.0.0:%d", config.HTTPServer.Port),
