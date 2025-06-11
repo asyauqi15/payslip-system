@@ -3,6 +3,10 @@ package jwt_auth
 import (
 	"context"
 	"fmt"
+	"log/slog"
+	"net/http"
+	"time"
+
 	"github.com/asyauqi15/payslip-system/internal"
 	"github.com/asyauqi15/payslip-system/internal/constant"
 	"github.com/asyauqi15/payslip-system/internal/entity"
@@ -10,15 +14,12 @@ import (
 	"github.com/go-chi/jwtauth"
 	"github.com/go-chi/render"
 	"github.com/spf13/cast"
-	"log/slog"
-	"net/http"
-	"time"
 )
 
 const (
-	jwtUserIDKey    = "user_id"
-	jwtUserEmailKey = "user_email"
-	jwtUserRoleKey  = "user_role"
+	jwtUserIDKey       = "user_id"
+	jwtUserUsernameKey = "username"
+	jwtUserRoleKey     = "user_role"
 )
 
 type JWTAuthentication struct {
@@ -70,7 +71,7 @@ func (ja *JWTAuthentication) Authenticator(next http.Handler) http.Handler {
 		ctx := r.Context()
 		{
 			ctx = context.WithValue(ctx, constant.ContextKeyUserID, cast.ToString(claims[jwtUserIDKey]))
-			ctx = context.WithValue(ctx, constant.ContextKeyUserEmail, cast.ToString(claims[jwtUserEmailKey]))
+			ctx = context.WithValue(ctx, constant.ContextKeyUsername, cast.ToString(claims[jwtUserUsernameKey]))
 			ctx = context.WithValue(ctx, constant.ContextKeyUserRole, cast.ToString(claims[jwtUserRoleKey]))
 		}
 
@@ -119,16 +120,16 @@ func parseToken(ctx context.Context, jwt *jwtauth.JWTAuth, token string) (TokenC
 
 	return TokenClaims{
 		UserID:    cast.ToString(claims[jwtUserIDKey]),
-		UserEmail: cast.ToString(claims[jwtUserEmailKey]),
+		UserEmail: cast.ToString(claims[jwtUserUsernameKey]),
 		UserRole:  cast.ToString(claims[jwtUserRoleKey]),
 	}, nil
 }
 
 func generateToken(ctx context.Context, jwt *jwtauth.JWTAuth, user *entity.User, expiredAt time.Time) (string, error) {
 	claims := map[string]interface{}{
-		jwtUserIDKey:    user.ID,
-		jwtUserEmailKey: user.Email,
-		jwtUserRoleKey:  user.Role,
+		jwtUserIDKey:       user.ID,
+		jwtUserUsernameKey: user.Username,
+		jwtUserRoleKey:     user.Role,
 	}
 	jwtauth.SetExpiry(claims, expiredAt)
 	jwtauth.SetIssuedNow(claims)

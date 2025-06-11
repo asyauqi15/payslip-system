@@ -2,10 +2,11 @@ package auth
 
 import (
 	"context"
+	"log/slog"
+
 	"github.com/asyauqi15/payslip-system/internal/entity"
 	httppkg "github.com/asyauqi15/payslip-system/pkg/http"
 	"golang.org/x/crypto/bcrypt"
-	"log/slog"
 )
 
 type Result struct {
@@ -13,19 +14,19 @@ type Result struct {
 	RefreshToken string
 }
 
-func (u *UsecaseImpl) Auth(ctx context.Context, email string, password string) (*Result, error) {
-	user, err := u.userRepo.FindOneByTemplate(ctx, &entity.User{Email: email}, nil)
+func (u *UsecaseImpl) Auth(ctx context.Context, username string, password string) (*Result, error) {
+	user, err := u.userRepo.FindOneByTemplate(ctx, &entity.User{Username: username}, nil)
 	if err != nil {
-		slog.ErrorContext(ctx, "failed to find user by email", "email", email, "error", err)
+		slog.ErrorContext(ctx, "failed to find user by username", "username", username, "error", err)
 		return nil, err
 	}
 	if user == nil {
-		return nil, httppkg.NewNotFoundError("email or password is incorrect")
+		return nil, httppkg.NewNotFoundError("username or password is incorrect")
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password))
 	if err != nil {
-		return nil, httppkg.NewUnauthorizedError("email or password is incorrect")
+		return nil, httppkg.NewUnauthorizedError("username or password is incorrect")
 	}
 
 	accessToken, _, err := u.jwtAuth.GenerateAccessToken(ctx, user)

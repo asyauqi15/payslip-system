@@ -4,8 +4,8 @@ CREATE TABLE attendance_periods (
     id BIGSERIAL PRIMARY KEY,
     start_date DATE NOT NULL,
     end_date DATE NOT NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
 CREATE INDEX idx_attendance_periods_start_date ON attendance_periods(start_date);

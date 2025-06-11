@@ -2,7 +2,7 @@ package entity
 
 type User struct {
 	Base
-	Email        string `gorm:"uniqueIndex;not null"`
+	Username     string `gorm:"uniqueIndex;not null"`
 	PasswordHash string `gorm:"not null"`
 	Role         string `gorm:"not null"`
 }

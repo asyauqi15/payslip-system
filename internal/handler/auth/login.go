@@ -2,9 +2,10 @@ package auth
 
 import (
 	"encoding/json"
+	"net/http"
+
 	v1 "github.com/asyauqi15/payslip-system/pkg/openapi/v1"
 	"github.com/go-chi/render"
-	"net/http"
 )
 
 func (h *HandlerImpl) Login(w http.ResponseWriter, r *http.Request) {
@@ -16,7 +17,7 @@ func (h *HandlerImpl) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	result, err := h.authUsecase.Auth(ctx, req.Email, req.Password)
+	result, err := h.authUsecase.Auth(ctx, req.Username, req.Password)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return

@@ -2,7 +2,7 @@ package constant
 
 const (
 	ContextKeyUserID    = "user_id"
-	ContextKeyUserEmail = "user_email"
+	ContextKeyUsername  = "username"
 	ContextKeyUserRole  = "user_role"
 	ContextKeyIPAddress = "ip_address"
 )

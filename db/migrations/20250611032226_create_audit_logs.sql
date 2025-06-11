@@ -1,7 +1,7 @@
 -- +goose Up
 -- +goose StatementBegin
 CREATE TABLE audit_logs (
-    id SERIAL PRIMARY KEY,
+    id BIGSERIAL PRIMARY KEY,
     table_name VARCHAR(255) NOT NULL,
     record_id BIGINT NOT NULL,
     action VARCHAR(50) NOT NULL,
