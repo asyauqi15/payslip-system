@@ -44,6 +44,7 @@ func NewRESTServer(
 		r.Use(middleware.RequireEmployeeRole)
 
 		r.Post("/attendance", h.Attendance.SubmitAttendance)
+		r.Post("/overtime", h.Overtime.SubmitOvertime)
 	})
 
 	return &RESTServer{

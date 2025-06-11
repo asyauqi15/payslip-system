@@ -53,6 +53,12 @@ func (u *SubmitAttendanceUsecaseImpl) SubmitAttendance(ctx context.Context, atte
 
 	currentTime := time.Now().Format(time.RFC3339)
 	today := time.Now().Format("2006-01-02")
+	now := time.Now()
+
+	// Check if today is a weekday (Monday to Friday)
+	if now.Weekday() == time.Saturday || now.Weekday() == time.Sunday {
+		return httppkg.NewBadRequestError("attendance can only be submitted on weekdays")
+	}
 
 	switch attendanceType {
 	case v1.CheckIn:

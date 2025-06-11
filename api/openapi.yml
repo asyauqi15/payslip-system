@@ -47,17 +47,16 @@ components:
 
     OvertimeRequest:
       type: object
-      required: [date, start_time, end_time]
+      required: [start_time, end_time, description]
       properties:
-        date:
-          type: string
-          format: date
         start_time:
           type: string
           format: date-time
         end_time:
           type: string
           format: date-time
+        description:
+          type: string
 
     ReimbursementRequest:
       type: object
