@@ -53,5 +53,5 @@ func (h *OvertimeHandlerImpl) SubmitOvertime(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	render.Status(r, http.StatusCreated)
+	w.WriteHeader(http.StatusCreated)
 }

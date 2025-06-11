@@ -12,6 +12,7 @@ type Registry struct {
 	AttendancePeriod admin.AttendancePeriodHandler
 	Attendance       employee.AttendanceHandler
 	Overtime         employee.OvertimeHandler
+	Reimbursement    employee.ReimbursementHandler
 }
 
 func InitializeHandler(usecase *usecase.Registry) *Registry {
@@ -20,5 +21,6 @@ func InitializeHandler(usecase *usecase.Registry) *Registry {
 		AttendancePeriod: admin.NewAttendancePeriodHandler(usecase.CreateAttendancePeriod),
 		Attendance:       employee.NewAttendanceHandler(usecase.SubmitAttendance),
 		Overtime:         employee.NewOvertimeHandler(usecase.SubmitOvertime),
+		Reimbursement:    employee.NewReimbursementHandler(usecase.SubmitReimbursement),
 	}
 }

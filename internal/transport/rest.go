@@ -45,6 +45,7 @@ func NewRESTServer(
 
 		r.Post("/attendance", h.Attendance.SubmitAttendance)
 		r.Post("/overtime", h.Overtime.SubmitOvertime)
+		r.Post("/reimbursement", h.Reimbursement.SubmitReimbursement)
 	})
 
 	return &RESTServer{

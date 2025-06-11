@@ -6,6 +6,7 @@ import (
 	"github.com/asyauqi15/payslip-system/internal/usecase/attendance_period"
 	authusecase "github.com/asyauqi15/payslip-system/internal/usecase/auth"
 	"github.com/asyauqi15/payslip-system/internal/usecase/overtime"
+	"github.com/asyauqi15/payslip-system/internal/usecase/reimbursement"
 	jwtauth "github.com/asyauqi15/payslip-system/pkg/jwt-auth"
 )
 
@@ -14,6 +15,7 @@ type Registry struct {
 	CreateAttendancePeriod attendance_period.CreateAttendancePeriodUsecase
 	SubmitAttendance       attendance.SubmitAttendanceUsecase
 	SubmitOvertime         overtime.SubmitOvertimeUsecase
+	SubmitReimbursement    reimbursement.SubmitReimbursementUsecase
 }
 
 func InitializeUseCase(repository *repository.Registry, jwt *jwtauth.JWTAuthentication) *Registry {
@@ -22,5 +24,6 @@ func InitializeUseCase(repository *repository.Registry, jwt *jwtauth.JWTAuthenti
 		CreateAttendancePeriod: attendance_period.NewCreateAttendancePeriodUsecase(repository.AttendancePeriodRepository),
 		SubmitAttendance:       attendance.NewSubmitAttendanceUsecase(repository.AttendanceRepository, repository.EmployeeRepository),
 		SubmitOvertime:         overtime.NewSubmitOvertimeUsecase(repository.OvertimeRepository, repository.EmployeeRepository, repository.AttendanceRepository),
+		SubmitReimbursement:    reimbursement.NewSubmitReimbursementUsecase(repository.ReimbursementRepository, repository.EmployeeRepository),
 	}
 }
